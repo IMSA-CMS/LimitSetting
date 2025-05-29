@@ -1,0 +1,39 @@
+Parameters values copied from Vincent's Code		Background function: p0*(x - p1)^p2
+
+Channel:				 	p0						p1				p2
+
+----eeee----
+eeee/t#bar{t}				1e+17 					-198.052 		-7.36526  
+eeee/ZZ						9.89705e+16 			-370.447 		-6.72728  
+eeee/Drell-Yan				5.52656e+41 			-294.649 		-16.4076 
+eeee/TTZ					6.1508e+18 				-550.011 		-7.32343 
+
+----eeeu----
+eeeu/t#bar{t}				5.25245e+07 			-25.3727 		-3.91674 
+eeeu/ZZ						1e+17 					-307.149 		-7.10446  
+eeeu/Drell-Yan				0						0				0
+eeeu/TTZ					1e+17 					-400 			-7 
+
+----eeuu----
+eeuu/t#bar{t}				5.6139e+21 				-348.665 		-8.78804 
+eeuu/ZZ						6.0228e+16 				-294.515 		-7.58086 
+eeuu/Drell-Yan				0						0				0
+eeuu/TTZ					1e+17 					-321.788 		-7.23406 
+
+----eueu----
+eueu/t#bar{t}				1.11416e+10 			-84.2536 		-4.75163  
+eueu/ZZ						9.91115e+14 			-233.933 		-6.0227 
+eueu/Drell-Yan				4386.81 				34.9875 		-2.26537 
+eueu/TTZ					1e+17 					-400 			-7
+
+----euuu----
+euuu/t#bar{t}				1.70211e+20 			-354.177 		-8.10791
+euuu/ZZ						6.7337e+13 				-214.474 		-6.09186 
+euuu/Drell-Yan				0						0				0
+euuu/TTZ					1.62921e+29 			-746.927		-10.3279
+
+----uuuu----
+uuuu/t#bar{t}				7.31818e+20 			-740.375 		-7.91047  
+uuuu/ZZ						1.00054e+11 			-181.972 		-4.77029 
+uuuu/Drell-Yan				677.319 				37.1241 		-2.1128 
+uuuu/TTZ					9.86988e+19 			-565.703 		-7.63112

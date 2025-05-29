@@ -1,0 +1,10 @@
+Signal Branch: eueu				Function: p0 * (realHiggsMass-p1)^p2 + p3				Parameter Values copied from Vincent's Code		
+
+Calculated Parameter			p0					p1				p2				p3
+alpha_low						1.769 				500 			-1.80228e-05 	0
+alpha_high						 2.65977 			500 			0.00133446  	0			
+n_low							2.04148 			-107.478 		-0.0818139		0		 
+n_high							1.01648 			70.852 			-0.00196245		0					
+mean							0.999066 			-0.144751 		1.00078 		0
+sigma							0.00511027 			3.78974 		1.22446 		0
+norm							1.55579e+38 		-874.331 		-11.6181  		0

@@ -1,0 +1,23 @@
+---------------------------------------------
+imax 1
+jmax 1 
+kmax *
+---------------------------------------------
+#we need a signal, background and data, can be called tag0 still,
+#Tag0 is the name of the bin
+#Need rate, which is the yield of events
+
+shapes      Ebkg_mass     Tag0      Mhiggsworkspace.root      Mhiggsworkspace:Elecmodel_bkg_Tag700
+shapes      data_obs     Tag0      Mhiggsworkspace.root      Mhiggsworkspace:ElectronEvents700
+shapes      EH++          Tag0      Mhiggsworkspace.root      Mhiggsworkspace:ElectronModelPDF700  
+
+
+---------------------------------------------
+bin             Tag0
+observation     -1
+---------------------------------------------
+bin             Tag0         Tag0
+process         EH++         Ebkg_mass
+process         0            1
+rate            181.01       1.0
+---------------------------------------------

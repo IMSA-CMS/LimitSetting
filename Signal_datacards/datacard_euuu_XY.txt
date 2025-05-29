@@ -1,0 +1,20 @@
+Combination of datacard_euuu_X.txt  datacard_euuu_Y.txt
+imax 2 number of bins
+jmax 3 number of processes minus 1
+kmax 0 number of nuisance parameters
+----------------------------------------------------------------------------------------------------------------------------------
+shapes bkg_euuu_X  ch1         higgsworkspace.root higgsworkspace:euuu_bkg_X
+shapes data_obs_X  ch1         higgsworkspace.root higgsworkspace:Events900_X
+shapes euuu_X      ch1         higgsworkspace.root higgsworkspace:euuu_signal_X
+shapes bkg_euuu_Y  ch2         higgsworkspace.root higgsworkspace:euuu_bkg_Y
+shapes data_obs_Y  ch2         higgsworkspace.root higgsworkspace:Events900_Y
+shapes euuu_Y      ch2         higgsworkspace.root higgsworkspace:euuu_signal_Y
+----------------------------------------------------------------------------------------------------------------------------------
+bin          ch1    ch2  
+observation  -1     -1   
+----------------------------------------------------------------------------------------------------------------------------------
+bin          ch1         ch1         ch2         ch2       
+process      euuu_X      bkg_euuu_X  euuu_Y      bkg_euuu_Y
+process      -1          1           0           2         
+rate         1           1           1           1         
+----------------------------------------------------------------------------------------------------------------------------------

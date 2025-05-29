@@ -1,0 +1,21 @@
+Combination of H++Datacard900elec.txt  H++Datacard900muon.txt
+imax 2 number of bins
+jmax 3 number of processes minus 1
+kmax 0 number of nuisance parameters
+----------------------------------------------------------------------------------------------------------------------------------
+shapes MH++       ch2        AutoGenHiggsworkspace.root AutoGenHiggsworkspace:muon_model
+shapes data_obs  ch2        AutoGenHiggsworkspace.root AutoGenHiggsworkspace:muon_data
+shapes Mbkg_mass  ch2        AutoGenHiggsworkspace.root AutoGenHiggsworkspace:muon_bkg0
+shapes Ebkg_mass  ch1        AutoGenHiggsworkspace.root AutoGenHiggsworkspace:electron_bkg0
+shapes EH++       ch1        AutoGenHiggsworkspace.root AutoGenHiggsworkspace:electron_model
+shapes data_obs  ch1        AutoGenHiggsworkspace.root AutoGenHiggsworkspace:electron_data
+
+----------------------------------------------------------------------------------------------------------------------------------
+bin          ch2    ch1  
+observation  -1     -1   
+----------------------------------------------------------------------------------------------------------------------------------
+bin          ch2        ch2        ch1        ch1      
+process      MH++       Mbkg_mass  EH++       Ebkg_mass
+process      -1         1          0          2        
+rate         181.01     1          181.01     1        
+----------------------------------------------------------------------------------------------------------------------------------

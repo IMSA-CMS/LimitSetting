@@ -1,0 +1,23 @@
+---------------------------------------------
+imax 1
+jmax 1 
+kmax *
+---------------------------------------------
+#we need a signal, background and data, can be called tag0 still,
+#Tag0 is the name of the bin
+#Need rate, which is the yield of events
+
+shapes      Mbkg_mass     Muon      Mhiggsworkspace.root      Mhiggsworkspace:Mumodel_bkg_Tag900
+shapes      data_obs     Muon      Mhiggsworkspace.root      Mhiggsworkspace:MuonEvents900
+shapes      MH++          Muon      Mhiggsworkspace.root      Mhiggsworkspace:MuonModelPDF900 
+
+
+---------------------------------------------
+bin             Muon
+observation     -1
+---------------------------------------------
+bin             Muon         Muon
+process         MH++         Mbkg_mass
+process         0            1
+rate            181.01       1.0
+---------------------------------------------

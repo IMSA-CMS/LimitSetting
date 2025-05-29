@@ -1,0 +1,7 @@
+Channel: eeee 				Parameters values copied from Vincent's Code		Background function: p0*(x - p1)^p2
+
+Source: 				 	p0						p1				p2
+t#bar{t}					1e+17 					-198.052 		-7.36526  
+ZZ							9.89705e+16 			-370.447 		-6.72728  
+Drell-Yan					5.52656e+41 			-294.649 		-16.4076 
+TTZ							6.1508e+18 				-550.011 		-7.32343 

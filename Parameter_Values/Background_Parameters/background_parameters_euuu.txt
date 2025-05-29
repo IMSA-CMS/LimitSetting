@@ -1,0 +1,7 @@
+Channel: euuu				Parameters values copied from Vincent's Code		Background function: p0*(x - p1)^p2
+
+Source:					 	p0						p1				p2
+t#bar{t}					1.70211e+20 			-354.177 		-8.10791
+ZZ							6.7337e+13 				-214.474 		-6.09186 
+Drell-Yan					0						0				0
+TTZ							1.62921e+29 			-746.927		-10.3279

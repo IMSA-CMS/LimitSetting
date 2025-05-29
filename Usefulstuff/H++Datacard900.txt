@@ -1,0 +1,23 @@
+---------------------------------------------
+imax 1
+jmax 1 
+kmax *
+---------------------------------------------
+#we need a signal, background and data, can be called tag0 still,
+#Tag0 is the name of the bin
+#Need rate, which is the yield of events
+
+shapes      bkg_mass     Tag0      higgsworkspace.root      higgsworkspace:model_bkg_Tag900
+shapes      data_obs     Tag0      higgsworkspace.root      higgsworkspace:Events900
+shapes      H++          Tag0      higgsworkspace.root      higgsworkspace:ModelPDF900 
+
+
+---------------------------------------------
+bin             Tag0
+observation     -1
+---------------------------------------------
+bin             Tag0         Tag0
+process         H++          bkg_mass
+process         0            1
+rate            181.01       1.0
+---------------------------------------------

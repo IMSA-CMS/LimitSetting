@@ -1,0 +1,20 @@
+# Datacard for the eeeu channel signal and background (Higgs Analysis)
+---------------------------------------------
+imax *
+jmax *
+kmax *
+---------------------------------------------
+
+shapes		eeeu_Y			analysis_1		higgsworkspace.root			higgsworkspace:eeeu_signal_Y
+shapes		bkg_eeeu_Y		analysis_1		higgsworkspace.root			higgsworkspace:eeeu_bkg_Y 
+shapes      data_obs_Y     	analysis_1      higgsworkspace.root      	higgsworkspace:Events900_Y
+
+---------------------------------------------
+bin				analysis_1
+observation		-1
+---------------------------------------------
+
+bin			analysis_1		analysis_1
+process		eeeu_Y			bkg_eeeu_Y
+process		0				1
+rate		1				1
