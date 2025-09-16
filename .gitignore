@@ -1,0 +1,63 @@
+# How to setup .gitignore https://www.atlassian.com/git/tutorials/saving-changes/gitignore
+
+# Python
+*__init__.py
+*.pyc
+
+# Emacs autosave files
+*~
+*#
+
+# Output files
+*.root
+*.png
+*.out
+
+# Root Build Files
+*.so
+*.d
+*.pcm
+
+# Text Files
+**/bin/*.txt
+*.txt
+
+# Keep all textfiles in textfiles
+!Parameter_Values/*/*.txt
+!Signal_datacards/*.txt
+
+#Remove temporary backups
+*backup.txt
+*backupshort.txt
+
+# Log Files
+*.log
+
+# Other
+*.pdf
+*.orig
+
+# Files to always include
+!*.cc
+!*.h
+
+#Root dictionary files
+*ACLiC*
+
+#Nohup files
+nohup.out
+
+#CRAB stuff
+CRAB/crab_projects
+CRAB/gen
+CRAB/__pycache__
+CRAB/crab_config.py
+CRAB/runAnalyzer.sh
+CRAB/input
+
+# Condor stuff
+BDT/condor_logs
+BDT/*.tar.gz
+
+# macOS
+._*

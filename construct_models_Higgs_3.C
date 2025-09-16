@@ -144,8 +144,10 @@ void construct_models_Higgs_3()
 	RooRealVar realHiggsMass("realHiggsMass", "realHiggsMass",1500, 200,2000);
 	RooRealVar Bee("b_ee", "b_ee", 1, 0,1);
 	RooRealVar Beu("b_eu", "b_eu",1, 0,1);
+	//RooRealVar norm_Systematic("normalization_systematic", "normalization_systematic", 0, -5, 5);
 	RooRealVar norm_Systematic("normalization_systematic", "normalization_systematic", 1, 0, 1);
-	RooRealVar shape_Systematic("shape_systematic", "shape_systeamtic", 1, 0, 1); 
+	//RooRealVar shape_Systematic("shape_systematic", "shape_systeamtic", 1, 0, 1); 
+	RooRealVar shape_Systematic("shape_systematic", "shape_systematic", 0, -5, 5);
 	norm_Systematic.setConstant(true);
 	shape_Systematic.setConstant(true);
 	
