@@ -45,11 +45,11 @@ def getXSecCurve(name,kFac,massDependent=False):
 			X.append(float(entries[0]))
 			Y.append(float(entries[1]))
 
-	print(X)
-	print(Y)
+	#print(X)
+	#print(Y)
 	aX=numpy.array(X)
 	aY=numpy.array(Y)
-	print(aY)
+	#print(aY)
 
 	Graph=TGraph(len(X),aX,aY)
 	GraphSmooth= Graph
@@ -146,7 +146,12 @@ def makeLimitPlot(output,exp,printStats=False,ratioLabel=""):#chan, -4th karedit
 	limits = {}
 	for i in range(0,len(allMasses)):
 		cross = cross_sections[allMasses[i]]
-		limits[allMasses[i]] = [float(median_limits[i]) * cross,float(_1Sigma_lower[i]) * cross,float(_1Sigma_upper[i]) * cross,float(_2Sigma_lower[i]) * cross,float(_2Sigma_upper[i]) * cross]
+		#limits[allMasses[i]] = [float(median_limits[i]) * cross,float(_1Sigma_lower[i]) * cross,float(_1Sigma_upper[i]) * cross,float(_2Sigma_lower[i]) * cross,float(_2Sigma_upper[i]) * cross]
+		limits[allMasses[i]] = [float(median_limits[i]),float(_1Sigma_lower[i]),float(_1Sigma_upper[i]),float(_2Sigma_lower[i]),float(_2Sigma_upper[i])]
+		for j in range(len(limits[allMasses[i]])):
+			limits[allMasses[i]][j] /= (137000 * 0.4)
+
+
 
 
 #Use SetPoint to add points but include the length.
@@ -180,9 +185,9 @@ def makeLimitPlot(output,exp,printStats=False,ratioLabel=""):#chan, -4th karedit
 		expected2SigHigh.append(limits[massPoint][4])
 		expectedx.append(massPoint)
 
-	print("------------------")
+	print("------------------ Expected X")
 	print(expectedx)
-	print("--------------")
+	print("-------------- Expected Y")
 	print(expectedy)
 	print("----------------------")
 	expX=numpy.array(expectedx)
@@ -315,9 +320,6 @@ def makeLimitPlot(output,exp,printStats=False,ratioLabel=""):#chan, -4th karedit
 	GraphErr2Sig.Draw("Fsame")
 	GraphErr1Sig.Draw("Fsame")
 	GraphExp.Draw("lpsame")
-    	
-	if not EXPONLY:
-		print("356")
     
 	# if WhichStudy == 1: #Draw the cross section only if it is the Higgs Study
 	for curve in xSecCurves:

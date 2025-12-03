@@ -16,6 +16,14 @@
 #include "TMath.h" 
 #include <RooGenericPdf.h>
 
+// Indices in bkg_params for each type of background
+const int I_TTBAR = 1;
+const int I_ZZ = 2;
+const int I_DY = 0;
+const int I_TTZ = 3;
+
+
+
 ClassImp(RooPDF_BKG); 
 
  RooPDF_BKG::RooPDF_BKG(const char *name, const char *title, 
@@ -27,6 +35,14 @@ ClassImp(RooPDF_BKG);
    bkg_params(_bkg_params),
    channel_name(_channel_name)
  { 
+  // std::cout << "Starting constructor\n";
+  // for (auto vec : bkg_params)
+  // {
+  //   for (auto num : vec)
+  //   {
+  //     std::cout << "Entry: " << num << '\n';
+  //   }
+  // }
  } 
 
 
@@ -40,7 +56,7 @@ ClassImp(RooPDF_BKG);
  
  RooGenericPdf RooPDF_BKG::ttbar()
  {
-  std::vector<double> bkg_type = bkg_params[0];
+  std::vector<double> bkg_type = bkg_params[I_TTBAR];
   std::string bkg_Function = std::to_string(bkg_type[0]) + "* (@0-" + std::to_string(bkg_type[1]) + ")^" + std::to_string(bkg_type[2]);
   RooGenericPdf bkg_ttbar((channel_name + "_bkg_ttbar").c_str(), bkg_Function.c_str(), RooArgSet(*x.absArg()));
   return bkg_ttbar;
@@ -48,7 +64,7 @@ ClassImp(RooPDF_BKG);
 
  RooGenericPdf RooPDF_BKG::ZZ()
  {
-  std::vector<double> bkg_type = bkg_params[1];
+  std::vector<double> bkg_type = bkg_params[I_ZZ];
   std::string bkg_Function = std::to_string(bkg_type[0]) + "* (@0-" + std::to_string(bkg_type[1]) + ")^" + std::to_string(bkg_type[2]);
   RooGenericPdf bkg_ZZ((channel_name + "_bkg_ZZ").c_str(), bkg_Function.c_str(), RooArgSet(*x.absArg()));
   return bkg_ZZ;
@@ -56,7 +72,7 @@ ClassImp(RooPDF_BKG);
 
  RooGenericPdf RooPDF_BKG::DY()
  {
-  std::vector<double> bkg_type = bkg_params[2];
+  std::vector<double> bkg_type = bkg_params[I_DY];
   std::string bkg_Function = std::to_string(bkg_type[0]) + "* (@0-" + std::to_string(bkg_type[1]) + ")^" + std::to_string(bkg_type[2]);
   RooGenericPdf bkg_DY((channel_name + "_bkg_DY").c_str(), bkg_Function.c_str(), RooArgSet(*x.absArg()));
   return bkg_DY;
@@ -64,7 +80,7 @@ ClassImp(RooPDF_BKG);
 
  RooGenericPdf RooPDF_BKG::TTZ()
  {
-  std::vector<double> bkg_type = bkg_params[3];
+  std::vector<double> bkg_type = bkg_params[I_TTZ];
   std::string bkg_Function = std::to_string(bkg_type[0]) + "* (@0-" + std::to_string(bkg_type[1]) + ")^" + std::to_string(bkg_type[2]);
   RooGenericPdf bkg_TTZ((channel_name + "_bkg_TTZ").c_str(), bkg_Function.c_str(), RooArgSet(*x.absArg()));
   return bkg_TTZ;
@@ -74,15 +90,39 @@ ClassImp(RooPDF_BKG);
 
  Double_t RooPDF_BKG::evaluate() const 
  { 
+  //std::cout << "Starting evaluate()\n";
   std::vector<double> component_functions;
   double function_sum = 0;
 	for (std::vector<double> bkg_type : bkg_params)
 	{
+    if (bkg_type.size() < 2)
+    {
+      continue;
+    }
+    //std::cerr << "Next loop iteration\n";
+    //std::cerr << bkg_type[0] << '\n' << bkg_type[1] << '\n' << bkg_type[2] <<'\n';
+
+    //std::cout << "BKG Components: " << bkg_type[0] << " " << bkg_type[1] << " " << bkg_type[2] << "\n";
+
+
+
 	  double bkg_component = bkg_type[0] * std::pow((x - bkg_type[1]),bkg_type[2]);
+    bool isNaN = std::isnan(bkg_component);
+    if (isNaN)
+    {
+      //std::cout << "NaN value from evaluating " << bkg_type[0] << " * " << "(" << x << "-" << bkg_type[1] << ")^" << bkg_type[2] << "\n";
+    }
+    // else
+    // {
+    //   std::cout << "Is a number" << "\n";
+    // }
+    //bool secondInvalidValueTest = bkg_type[2] <= 0;
+    //std::cout << "Test statement: " << invalidValueTest << "\n";
 		component_functions.push_back(bkg_component);
     function_sum += bkg_component;
 	}
-  
+  //std::cout << GetName() << " bkg function_sum: " << function_sum << "\n";
+  //std::cout << "\n \n \n";
   return function_sum; 
  } 
 

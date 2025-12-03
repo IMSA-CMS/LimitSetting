@@ -15,6 +15,14 @@
 #include "TMath.h" 
 #include "RooFormulaVar.h" 
 
+// Indices in signal_params for each parameter
+const int ALPHA_L = 1;
+const int ALPHA_H = 0;
+const int N_L = 5;
+const int N_H = 4;
+const int MEAN = 2;
+const int SIGMA = 3;
+const int NORM = 6;
 
 ClassImp(RooPDF_DSCB_test); 
 
@@ -55,22 +63,67 @@ ClassImp(RooPDF_DSCB_test);
 
  RooFormulaVar RooPDF_DSCB_test::signal_norm(std::string channel_name)
  {
-	std::string norm_string = "@1 * " + std::to_string(signal_params[6][0]) +  "* (@0 - " + std::to_string(signal_params[6][1]) + ")^" + std::to_string(signal_params[6][2]) + " + " + std::to_string(signal_params[6][3]);
+	// std::cout << "signal_params[NORM][0] = " << signal_params[NORM][0] << "\n";
+	// std::cout << "signal_params[NORM][1] = " << signal_params[NORM][1] << "\n";
+	// std::cout << "signal_params[NORM][2] = " << signal_params[NORM][2] << "\n";
+	// std::cout << "signal_params[NORM][3] = " << signal_params[NORM][3] << "\n";
+
+
+	//std::string norm_string = "@1 * " + std::to_string(signal_params[NORM][0]) +  "* (@0 - " + std::to_string(signal_params[NORM][1]) + ")^" + std::to_string(signal_params[NORM][2]) + " + " + std::to_string(signal_params[NORM][3]);
+	std::string norm_string = "@1 * " + std::to_string(signal_params[NORM][0]) +  "* (@0 - " + std::to_string(signal_params[NORM][1]) + ")^" + std::to_string(signal_params[NORM][2]);
+
 	RooFormulaVar norm((channel_name + "_norm").c_str(), (channel_name + "_norm").c_str(), norm_string.c_str(), RooArgList(*realHiggsMass.absArg(), *norm_Systematic.absArg()));
 	return norm;
+ }
+
+ double RooPDF_DSCB_test::evaluatePowerLaw(double p0, double p1, double p2) const
+ {
+	return p0 * std::pow((realHiggsMass - p1), p2);
  }
 
 
  Double_t RooPDF_DSCB_test::evaluate() const 
  { 
-  double alpha_l = signal_params[0][0] * std::pow((realHiggsMass - signal_params[0][1]), signal_params[0][2]) + signal_params[0][3];
-	double alpha_h = signal_params[1][0] * std::pow((realHiggsMass - signal_params[1][1]), signal_params[1][2]) + signal_params[1][3];
-	double n_l = signal_params[2][0] * std::pow((realHiggsMass - signal_params[2][1]), signal_params[2][2]) + signal_params[2][3];
-	double n_h = signal_params[3][0] * std::pow((realHiggsMass - signal_params[3][1]), signal_params[3][2]) + signal_params[3][3];
-	double mean = shape_Systematic * signal_params[4][0] * std::pow((realHiggsMass - signal_params[4][1]), signal_params[4][2]) + signal_params[4][3];
-	double sigma = signal_params[5][0] * std::pow((realHiggsMass - signal_params[5][1]), signal_params[5][2]) + signal_params[5][3];
-	double norm =  signal_params[6][0] * std::pow((realHiggsMass - signal_params[6][1]), signal_params[6][2]) + signal_params[6][3];
-	double t = (x - mean) / sigma; 
+
+//   double alpha_l = signal_params[ALPHA_L][0] * std::pow((realHiggsMass - signal_params[ALPHA_L][1]), signal_params[ALPHA_L][2]) + signal_params[ALPHA_L][3];
+// 	double alpha_h = signal_params[ALPHA_H][0] * std::pow((realHiggsMass - signal_params[ALPHA_H][1]), signal_params[ALPHA_H][2]) + signal_params[ALPHA_H][3];
+// 	double n_l = signal_params[N_L][0] * std::pow((realHiggsMass - signal_params[N_L][1]), signal_params[N_L][2]) + signal_params[N_L][3];
+// 	double n_h = signal_params[N_H][0] * std::pow((realHiggsMass - signal_params[N_H][1]), signal_params[N_H][2]) + signal_params[N_H][3];
+// 	double mean = shape_Systematic * signal_params[MEAN][0] * std::pow((realHiggsMass - signal_params[MEAN][1]), signal_params[MEAN][2]) + signal_params[MEAN][3];
+// 	double sigma = signal_params[SIGMA][0] * std::pow((realHiggsMass - signal_params[SIGMA][1]), signal_params[SIGMA][2]) + signal_params[SIGMA][3];
+// 	double norm =  signal_params[NORM][0] * std::pow((realHiggsMass - signal_params[NORM][1]), signal_params[NORM][2]) + signal_params[NORM][3];
+// 	double t = (x - mean) / sigma; 
+
+
+double alpha_l = evaluatePowerLaw(signal_params[ALPHA_L][0], signal_params[ALPHA_L][1], signal_params[ALPHA_L][2]);
+double alpha_h = evaluatePowerLaw(signal_params[ALPHA_H][0], signal_params[ALPHA_H][1], signal_params[ALPHA_H][2]);
+double n_l = evaluatePowerLaw(signal_params[N_L][0], signal_params[N_L][1], signal_params[N_L][2]);
+double n_h = evaluatePowerLaw(signal_params[N_H][0], signal_params[N_H][1], signal_params[N_H][2]);
+double mean = evaluatePowerLaw(signal_params[MEAN][0], signal_params[MEAN][1], signal_params[MEAN][2]);
+double sigma = evaluatePowerLaw(signal_params[SIGMA][0], signal_params[SIGMA][1], signal_params[SIGMA][2]);
+double norm = evaluatePowerLaw(signal_params[NORM][0], signal_params[NORM][1], signal_params[NORM][2]);
+double t = (x - mean) / sigma;
+
+
+	//std::cout << GetName() << " parameters: " << "\n";
+	//std::cout << "x: " << x << "\n";
+	// std::cout << "Mean: " << mean << "\n";
+	// std::cout << "Norm: " << norm << "\n";
+	// std::cout << "n_l: " << n_l << "\n";
+	// std::cout << "n_h: " << n_h << "\n";
+	// std::cout << "alpha_l: " << alpha_l << "\n";
+	// std::cout << "alpha_h: " << alpha_h << "\n";
+	// std::cout << "sigma: " << sigma << "\n"; 
+	// std::cout << "Mean parameters: " << signal_params[MEAN][0] << ", " << signal_params[MEAN][1] << ", " << signal_params[MEAN][2] << "\n";
+	// std::cout << "Norm parameters: " << signal_params[NORM][0] << ", " << signal_params[NORM][1] << ", " << signal_params[NORM][2] << "\n";
+	// std::cout << "n_l parameters: " << signal_params[N_L][0] << ", " << signal_params[N_L][1] << ", " << signal_params[N_L][2] << "\n";
+	// std::cout << "n_h parameters: " << signal_params[N_H][0] << ", " << signal_params[N_H][1] << ", " << signal_params[N_H][2] << "\n";
+	// std::cout << "alpha_l parameters: " << signal_params[ALPHA_L][0] << ", " << signal_params[ALPHA_L][1] << ", " << signal_params[ALPHA_L][2] << "\n";
+	// std::cout << "alpha_h parameters: " << signal_params[ALPHA_H][0] << ", " << signal_params[ALPHA_H][1] << ", " << signal_params[ALPHA_H][2] << "\n";
+	// std::cout << "sigma parameters: " << signal_params[SIGMA][0] << ", " << signal_params[SIGMA][1] << ", " << signal_params[SIGMA][2] << "\n";
+	// std::cout << "realHiggsMass: " << realHiggsMass << "\n \n \n";
+
+
 
 
 	double result;
@@ -78,6 +131,11 @@ ClassImp(RooPDF_DSCB_test);
 	double fact2TLessMinosAlphaL = (n_l/alpha_l) - alpha_l -t;
 	double fact1THhigerAlphaH = alpha_h/n_h;
 	double fact2THigherAlphaH = (n_h/alpha_h) - alpha_h +t;
+
+	
+
+
+
 
 	double root2 = std::pow(2,0.5);
 	if (-alpha_l <= t && alpha_h >= t)
@@ -99,7 +157,9 @@ ClassImp(RooPDF_DSCB_test);
 	double gaussianNormB = std::pow(M_PI/2, 0.5) * gaussianNormA;
 	double functionNormalization = std::pow(sigma * (gaussianNormB + lowTailNorm + highTailNorm ), -1);
 
-	
+	// std::cout << "calculated norm: " << norm << "\n";
+	// std::cout << "functionNormalization: " << functionNormalization << "\n";
+	// std::cout << "result: " << result << "\n \n \n";
 	if (multiplyBy2)
 	{
 		// return 2 * branch_ratio_1 * branch_ratio_2 * norm * functionNormalization * result; 
