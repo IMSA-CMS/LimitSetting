@@ -124,12 +124,27 @@ def makeLimitPlot(output,exp,printStats=False,ratioLabel=""):#chan, -4th karedit
 			skip = False
 		else:
 			entries = line.split()
+			if 'None' in entries:
+				continue
 			allMasses.append(float(entries[0]))
 			median_limits.append(float(entries[1]))
 			_1Sigma_lower.append(float(entries[2]))
 			_1Sigma_upper.append(float(entries[3]))
 			_2Sigma_lower.append(float(entries[4]))
 			_2Sigma_upper.append(float(entries[5]))
+			if len(entries) >= 6:
+				try:
+					allMasses.append(float(entries[0]))
+					median_limits.append(float(entries[1]))
+					_1Sigma_lower.append(float(entries[2]))
+					_1Sigma_upper.append(float(entries[3]))
+					_2Sigma_lower.append(float(entries[4]))
+					_2Sigma_upper.append(float(entries[5]))
+				except ValueError as e:
+					print(f"Error converting values to float in line: {line.strip()}")
+					print(f"Error: {e}")
+					continue
+
 	
 	file = open("cross_sections_HiggsAnalysis.txt")
 	cross_sections = {}
