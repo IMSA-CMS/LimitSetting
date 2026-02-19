@@ -1,7 +1,7 @@
 import subprocess
 import re
 
-lowerBound = 600
+lowerBound = 500
 upperBound = 1500
 step = 100
 n = int((upperBound - lowerBound) / step)
@@ -9,26 +9,35 @@ massArray = []
 for  i in range(n + 1):
 	massArray.append(lowerBound + i * step)
 
+file_name = "eeee-uuuuChannelsOnly.root"
 # Use this for no systematics (make sure to put systematics here as final)
-#file_name = "Signal_datacards/datacard_Higgs_Combined.root"
+# file_name = "Signal_datacards/datacard_Higgs_Combined.root"
 # Use this for no systematics testing with only a single channel
 #file_name = "Signal_datacards/datacard_eeee_X_copy.root"
 
 # Use this for systematics testing
 #file_name = "Signal_datacards/datacard_Higgs_Combined_copy.root"
 #file_name = "Signal_datacards/datacard_Higgs_Combined_copy2.root"
+<<<<<<< HEAD
 file_name = "Signal_datacards/datacard_Higgs_Combined.root"
+=======
+#file_name = "Signal_datacards/datacard_Higgs_Combined_copy3.root"
+>>>>>>> 26faa2700ab3e558e75938fa85e04194e47df49f
 # Use this for systematics testing for only a single channel
 #file_name = "Signal_datacards/datacard_eeee_X_copyForSystematicsTesting.root"
 
 terminal_outputs = []
 counter = 0
+
+# Note: When using AsymptoticLimits, comment out the --tries, -i, and "t" settings
 for mass in massArray:
 	
 	result = subprocess.run(
 	[
+		#"nohup",
 		"combine",
 		file_name,
+		#"-M", "AsymptoticLimits",
 		"-M", "MarkovChainMC",
 		"--freezeParameters", "realHiggsMass,b_ee,b_eu",
 		"--setParameters", f"realHiggsMass={mass},b_ee=1,b_eu=1",

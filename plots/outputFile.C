@@ -4,7 +4,7 @@
 void outputFile()
 {
 //=========Macro generated from canvas: cCL/cCL
-//=========  (Sat Jul 26 11:05:49 2025) by ROOT version 6.30/07
+//=========  (Wed Nov 12 14:25:29 2025) by ROOT version 6.30/07
    TCanvas *cCL = new TCanvas("cCL", "cCL",0,0,600,450);
    gStyle->SetOptStat(0);
    cCL->SetHighLightColor(2);
@@ -61,8 +61,8 @@ void outputFile()
    
    Double_t Graph0_fx1[20] = { 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1500, 1400, 1300, 1200, 1100, 1000, 900,
    800, 700, 600 };
-   Double_t Graph0_fy1[20] = { 1.82146e-05, 1.171485e-05, 1.140374e-05, 1.76327e-05, 1.420324e-05, 1.396337e-05, 1.271878e-05, 1.218909e-05, 1.205214e-05, 1.131155e-05, 1.131155e-05, 1.793608e-05, 1.218909e-05, 1.271878e-05, 1.396337e-05, 1.420324e-05, 1.76327e-05,
-   1.140374e-05, 1.171485e-05, 1.82146e-05 };
+   Double_t Graph0_fy1[20] = { 7.647099e-05, 7.645894e-05, 7.645894e-05, 7.645894e-05, 7.653887e-05, 7.653887e-05, 7.231569e-05, 3.202518e-05, 3.302445e-05, 3.302445e-05, 3.302445e-05, 3.302445e-05, 3.202518e-05, 7.231569e-05, 7.653887e-05, 7.653887e-05, 7.645894e-05,
+   7.645894e-05, 7.645894e-05, 7.647099e-05 };
    TGraph *graph = new TGraph(20,Graph0_fx1,Graph0_fy1);
    graph->SetName("Graph0");
    graph->SetTitle("Graph");
@@ -72,8 +72,8 @@ void outputFile()
    graph->SetFillStyle(1000);
    
    TH1F *Graph_Graph01 = new TH1F("Graph_Graph01","Graph",100,510,1590);
-   Graph_Graph01->SetMinimum(1.062125e-05);
-   Graph_Graph01->SetMaximum(1.89049e-05);
+   Graph_Graph01->SetMinimum(2.757381e-05);
+   Graph_Graph01->SetMaximum(8.099024e-05);
    Graph_Graph01->SetDirectory(nullptr);
    Graph_Graph01->SetStats(0);
 
@@ -93,8 +93,8 @@ void outputFile()
    
    Double_t Graph1_fx3001[20] = { 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1500, 1400, 1300, 1200, 1100, 1000, 900,
    800, 700, 600 };
-   Double_t Graph1_fy3001[20] = { 1.82146e-05, 1.171485e-05, 1.140374e-05, 1.76327e-05, 1.420324e-05, 1.396337e-05, 1.271878e-05, 1.218909e-05, 1.208307e-05, 1.131155e-05, 1.131155e-05, 1.793608e-05, 1.218909e-05, 1.271878e-05, 1.396337e-05, 1.420324e-05, 1.76327e-05,
-   1.140374e-05, 1.171485e-05, 1.82146e-05 };
+   Double_t Graph1_fy3001[20] = { 7.647099e-05, 7.645894e-05, 7.645894e-05, 7.645894e-05, 7.653887e-05, 7.653887e-05, 7.231569e-05, 3.202518e-05, 3.302445e-05, 3.302445e-05, 3.302445e-05, 3.302445e-05, 3.202518e-05, 7.231569e-05, 7.653887e-05, 7.653887e-05, 7.645894e-05,
+   7.645894e-05, 7.645894e-05, 7.647099e-05 };
    Double_t Graph1_felx3001[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
    0, 0, 0 };
    Double_t Graph1_fely3001[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -112,8 +112,8 @@ void outputFile()
    grae->SetFillStyle(1000);
    
    TH1F *Graph_Graph13001 = new TH1F("Graph_Graph13001","Graph",100,510,1590);
-   Graph_Graph13001->SetMinimum(1.062125e-05);
-   Graph_Graph13001->SetMaximum(1.89049e-05);
+   Graph_Graph13001->SetMinimum(2.757381e-05);
+   Graph_Graph13001->SetMaximum(8.099024e-05);
    Graph_Graph13001->SetDirectory(nullptr);
    Graph_Graph13001->SetStats(0);
 
@@ -132,7 +132,7 @@ void outputFile()
    grae->Draw("f");
    
    Double_t Graph2_fx2[10] = { 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500 };
-   Double_t Graph2_fy2[10] = { 1.82146e-05, 1.171485e-05, 1.140374e-05, 1.76327e-05, 1.420324e-05, 1.396337e-05, 1.271878e-05, 1.218909e-05, 1.233854e-05, 1.131155e-05 };
+   Double_t Graph2_fy2[10] = { 7.647099e-05, 7.645894e-05, 7.645894e-05, 7.645894e-05, 7.653887e-05, 7.653887e-05, 7.231569e-05, 3.202518e-05, 3.302445e-05, 3.302445e-05 };
    graph = new TGraph(10,Graph2_fx2,Graph2_fy2);
    graph->SetName("Graph2");
    graph->SetTitle("Graph");
@@ -141,8 +141,8 @@ void outputFile()
    graph->SetLineWidth(2);
    
    TH1F *Graph_Graph22 = new TH1F("Graph_Graph22","Graph",100,510,1590);
-   Graph_Graph22->SetMinimum(1.062125e-05);
-   Graph_Graph22->SetMaximum(1.89049e-05);
+   Graph_Graph22->SetMinimum(2.757381e-05);
+   Graph_Graph22->SetMaximum(8.099024e-05);
    Graph_Graph22->SetDirectory(nullptr);
    Graph_Graph22->SetStats(0);
 

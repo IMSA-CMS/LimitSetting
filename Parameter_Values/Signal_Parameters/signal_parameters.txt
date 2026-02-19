@@ -1,0 +1,65 @@
+Channel: eeee				Function: p0 * (realHiggsMass-p1)^p2 + p3				Parameter Values copied from Vincent's Code		
+
+Calculated Parameter			p0					p1				p2				p3
+alpha_low						3.08468 			2.29497 		-0.0791008  	0
+alpha_high						2.23037 			500 			0.0251907 		0 
+n_low							0.888921 			-0.364782		0.0231063 		0 
+n_high							1.00916 			499.997 		-1.63238e-06	0
+mean							1.03195 			3.04091			0.996127 		0
+sigma							2.69789e-08 		-245.581 		2.89191 		0
+norm							1.78163e+40 		-1008.78 		-12.3344 		0 
+
+Channel: eeeu				Function: p0 * (realHiggsMass-p1)^p2 + p3				Parameter Values copied from Vincent's Code		
+
+Calculated Parameter			p0					p1				p2				p3
+alpha_low						1.79686 			500 			-0.00277593		0
+alpha_high						3.52287 			5.9977 			-0.0490461  	0				
+n_low							1.10196 			500 			-0.000107371  	0			 
+n_high							1.00559 			499.999 		-2.12461e-09 	0 
+mean							1.01062 			1.08625 		0.999084 		0
+sigma							0.00826677 			-7.17833 		1.11071 		0 
+norm							2.66974e+38 		-889.61 		-11.6839 		0 
+
+Channel: eeuu				Function: p0 * (realHiggsMass-p1)^p2 + p3				Parameter Values copied from Vincent's Code		
+
+Calculated Parameter			p0					p1				p2				p3
+alpha_low						2.73031 			89.0036 		-0.0723147		0
+alpha_high						35.3617 			-705.795 		-0.366722  		0			
+n_low							2.63878 			-9.50915 		-0.130032 		0  				 
+n_high							0.985351 			-2.42335 		0.00317828		0 					
+mean							1.06397 			5.346 			0.992364 		0
+sigma							0.0141534 			7.03442 		1.05982  		0
+norm							4.35391e+36 		-810.791 		-11.2849 		0
+
+Channel: eueu				Function: p0 * (realHiggsMass-p1)^p2 + p3				Parameter Values copied from Vincent's Code		
+
+Calculated Parameter			p0					p1				p2				p3
+alpha_low						1.769 				500 			-1.80228e-05 	0
+alpha_high						 2.65977 			500 			0.00133446  	0			
+n_low							2.04148 			-107.478 		-0.0818139		0		 
+n_high							1.01648 			70.852 			-0.00196245		0					
+mean							0.999066 			-0.144751 		1.00078 		0
+sigma							0.00511027 			3.78974 		1.22446 		0
+norm							1.55579e+38 		-874.331 		-11.6181  		0
+
+Channel: euuu				Function: p0 * (realHiggsMass-p1)^p2 + p3				Parameter Values copied from Vincent's Code		
+
+Calculated Parameter			p0					p1				p2				p3
+alpha_low						0.805753 			-575.647 		0.106298 		0
+alpha_high						2.68539 			500 			-2.10785e-06	0 			
+n_low							11.7186 			-0.540781		-0.341746 		0				 
+n_high							1.00367 			0 				5.08351e-09  	0					
+mean							1.01286				1.22073 		0.999168  		0				
+sigma							0.00573559 			3.75786 		1.23153 		0					
+norm							1.15576e+38 		-864.46 		-11.5807 		0
+
+Channel: uuuu				Function: p0 * (realHiggsMass-p1)^p2 + p3				Parameter Values copied from Vincent's Code		
+
+Calculated Parameter			p0					p1				p2				p3
+alpha_low						0.80495 			-471.666		0.109134  		0
+alpha_high						4.42935 			56.256 			-0.0742912 		0 			
+n_low							35.9383 			-250.025 		-0.471297		0			 
+n_high							0.979723 			58.1482 		0.00373928 		0 				
+mean							1.12629 			10.2792 		0.985167		0				
+sigma							0.00682676 			-2.898 			1.22277 		0			
+norm							1.07917e+38 		-895.049 		-11.7262 		0 

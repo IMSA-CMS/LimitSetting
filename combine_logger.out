@@ -7,6 +7,7 @@ Combine.cc[1053] : (in function: run) - CMS_channel = 0
 Combine.cc[1053] : (in function: run) - b_ee = 1 (constant)
 Combine.cc[1053] : (in function: run) - b_eu = 1 (constant)
 Combine.cc[1053] : (in function: run) - mass = 880.883 
+<<<<<<< HEAD
 Combine.cc[1053] : (in function: run) - n_exp_binch1_ch1_proc_bkg_eeee_X = 1 (constant)
 Combine.cc[1053] : (in function: run) - n_exp_binch1_ch2_proc_bkg_eeee_Y = 1 (constant)
 Combine.cc[1053] : (in function: run) - n_exp_binch2_ch1_proc_bkg_eeeu_X = 1 (constant)
@@ -21,3 +22,17 @@ Combine.cc[1053] : (in function: run) - n_exp_binch6_ch1_proc_bkg_uuuu_X = 1 (co
 Combine.cc[1053] : (in function: run) - n_exp_binch6_ch2_proc_bkg_uuuu_Y = 1 (constant)
 Combine.cc[1053] : (in function: run) - r = 0 
 Combine.cc[1053] : (in function: run) - realHiggsMass = 1500 (constant)
+=======
+Combine.cc[1053] : (in function: run) - n_exp_binName1_ch1_proc_bkg_eeee_X = 1 (constant)
+Combine.cc[1053] : (in function: run) - n_exp_binName1_ch2_proc_bkg_eeee_Y = 1 (constant)
+Combine.cc[1053] : (in function: run) - n_exp_binName2_ch1_proc_bkg_uuuu_X = 1 (constant)
+Combine.cc[1053] : (in function: run) - n_exp_binName2_ch2_proc_bkg_uuuu_Y = 1 (constant)
+Combine.cc[1053] : (in function: run) - normalization_systematic = 1 (constant)
+Combine.cc[1053] : (in function: run) - r = 0 
+Combine.cc[1053] : (in function: run) - realHiggsMass = 1500 (constant)
+Combine.cc[1053] : (in function: run) - shapeBkg_bkg_eeee_X_Name1_ch1__norm = 4232.08 (constant)
+Combine.cc[1053] : (in function: run) - shapeBkg_bkg_eeee_Y_Name1_ch2__norm = 355.228 (constant)
+Combine.cc[1053] : (in function: run) - shapeBkg_bkg_uuuu_X_Name2_ch1__norm = 5915.06 (constant)
+Combine.cc[1053] : (in function: run) - shapeBkg_bkg_uuuu_Y_Name2_ch2__norm = 337.758 (constant)
+Combine.cc[1053] : (in function: run) - shape_systematic = 0 (constant)
+>>>>>>> 26faa2700ab3e558e75938fa85e04194e47df49f

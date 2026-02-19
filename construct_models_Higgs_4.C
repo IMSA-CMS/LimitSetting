@@ -31,28 +31,11 @@
 #include "RooPDF_DSCB_test.h"
 #include "RooPDF_BKG.h"
 #include "RooGenericPdf.h"
-#include "CMSAnalysis/Analysis/interface/FitFunction.hh"
-#include "CMSAnalysis/Analysis/interface/FitFunctionCollection.hh"
 
 
-
-struct Channel
-{
-	std::string name;
-	std::map<std::string, FitFunction> fitFunctions;
-	Channel(std::string channelName, std::vector<FitFunction> channelFunctions);
-	std::vector<std::vector<double>> extractParameters();
-
-};
-
-
-
-
-void construct_models_Higgs_5();
+void construct_models_Higgs_4();
 
 std::vector<double> split(const std::string& line);
-std::string replaceAll(std::string unmodifiedString, const std::string from, const std::string to);
-
 std::vector<std::string> splitLine(const std::string& str);
 std::vector<std::vector<double>> getParameters(std::vector<std::string> channelParameters);
 TGraph makeGraph(double numCoords, std::vector<double>& xCoords, std::vector<double>& yCoords);
@@ -60,57 +43,8 @@ TGraph makeGraph(double numCoords, std::vector<double>& xCoords, std::vector<dou
 RooPDF_BKG create_bkg_pdf(std::string channel_name, std::vector<std::string> parameterSet, RooRealVar& mass);
 RooPDF_DSCB_test create_signal_pdf(std::string channel_name, std::vector<std::string> parameterSet, RooRealVar& mass, RooRealVar& realHiggsMass, RooRealVar& branch_1, RooRealVar& branch_2, RooRealVar& norm_Systematic, RooRealVar& shape_Systematic);
 RooFormulaVar get_signal_norm(std::string channel_name, std::vector<std::string> parameterSet, RooRealVar& realHiggsMass);
-std::map<std::string, std::vector<double>> getParameterValuesFromMap(std::string fileName, std::vector<string>* channelNames);
+std::map<std::string, std::vector<std::string>> getParameterLinesFromFile(std::string fileName, std::vector<string>* channelNames);
 bool containsSubstring(std::string mainString, std::string subString);
-
-
-
-
-
-Channel::Channel(std::string channelName, std::vector<FitFunction> channelFunctions)
-{
-	name = channelName;
-	for (auto channelFunction : channelFunctions)
-	{
-		std::string functionName = channelFunction.getParameterName();
-		fitFunctions[functionName] = channelFunction;
-	}
-}
-
-std::vector<std::vector<double>> Channel::extractParameters()
-{
-	std::vector<std::vector<double>> extractedParameters = {};
-
-	// Record names of functions and alphabetize them
-	std::vector<std::string> functionNames = {};
-	for (auto [functionName, function] : fitFunctions)
-	{
-		functionNames.push_back(functionName);
-	}
-	std::sort(functionNames.begin(), functionNames.end());
-
-	// Goes through each function (in alphabetical order) and extracts their parameters 
-	for (auto functionName : functionNames)
-	{
-		auto function = fitFunctions[functionName].getFunction();
-		
-		std::vector<double> functionParameters = {};
-
-		for (int i = 0; i < function->GetNpar(); i++)
-		{
-			functionParameters.push_back(function->GetParameter(i));
-		}
-		for (int i = 0; i < function->GetNpar(); i++)
-		{
-			functionParameters.push_back(function->GetParError(i));
-		}
-
-		extractedParameters.push_back(functionParameters);
-	}
-
-	return extractedParameters;
-}
-
 
 
 // Splits parameter lines by spaces, skipping the first entry (which I used as a name and not a value I actually need)
@@ -183,22 +117,6 @@ std::string removeSubstring(const std::string& original, const std::string& toRe
     return result;
 }
 
-std::string replaceAll(std::string unmodifiedString, const std::string from, const std::string to)
-{
-    if (from.empty())
-        return unmodifiedString; // avoid infinite loop if 'from' is empty
-
-    std::string str = unmodifiedString;
-    size_t start_pos = 0;
-    while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
-        str.replace(start_pos, from.length(), to);
-        start_pos += to.length(); // move past the replaced part
-    }
-    
-    return str;
-
-}
-
 
 // Helper function for splitting strings
 // std::vector<std::string> split(const std::string& str, char delimiter) {
@@ -236,10 +154,9 @@ std::vector<std::vector<double>> getParameters(std::vector<std::string> channelP
 }
 
 // Creates a RooPDF_DSCB_test object for a channel (The naming stuff is for consistency, I don't think it matters since I am copying it anyway)
-RooPDF_DSCB_test create_signal_pdf(std::string channel_name, Channel signalChannel, RooRealVar& mass, RooRealVar& realHiggsMass, RooRealVar& branch_1, RooRealVar& branch_2, RooRealVar& norm_Systematic, RooRealVar& shape_Systematic)
+RooPDF_DSCB_test create_signal_pdf(std::string channel_name, std::vector<std::string> parameterSet, RooRealVar& mass, RooRealVar& realHiggsMass, RooRealVar& branch_1, RooRealVar& branch_2, RooRealVar& norm_Systematic, RooRealVar& shape_Systematic)
 {
-	std::vector<std::vector<double>> parameters = signalChannel.extractParameters();
-	//std::vector<std::vector<double>> parameters = getParameters(parameterSet);
+	std::vector<std::vector<double>> parameters = getParameters(parameterSet);
 	// (The naming stuff is for consistency, I don't think it matters since I am copying the object out of the function anyway)
 	RooPDF_DSCB_test pdf((channel_name + "_signal").c_str(), (channel_name + "_signal").c_str(), mass, realHiggsMass, branch_1, branch_2, norm_Systematic, shape_Systematic, parameters, false); 
 	
@@ -269,51 +186,62 @@ RooFormulaVar get_signal_norm(std::string channel_name, std::vector<std::string>
 }
 
 // Creates a RooPDF_BKG Object 
-RooPDF_BKG create_bkg_pdf(std::string channel_name, Channel backgroundChannel, RooRealVar& mass)
+RooPDF_BKG create_bkg_pdf(std::string channel_name, std::vector<std::string> parameterSet, RooRealVar& mass)
 {
-	std::vector<std::vector<double>> bkg_types_params = backgroundChannel.extractParameters();
+	std::vector<std::vector<double>> bkg_types_params= getParameters(parameterSet);
+	
 	// (The naming stuff is for consistency, I don't think it matters since I am copying the object out of the function anyway)
 	RooPDF_BKG pdf((channel_name + "_bkg").c_str(), (channel_name + "_bkg").c_str(), mass, bkg_types_params, channel_name); 
 	return pdf;
 }
 
-// std::map<std::string, std::vector<std::vector<double>>> getParametersFromMap(std::map<std::string, std::vector<FitFunction>> sortedFunctions, std::vector<string>* channelNames)
-// {
-// 	std::map<std::string, std::vector<std::vector<double>>> parameters;
- 
-// 	for (const auto [channel, parameters] : sortedFunctions)
-// 	{
-// 		// Record channels
-// 		if (std::find(channelNames->begin(), channelNames->end(), channel) == channelNames->end())
-// 		{
-// 			channelNames->push_back(channel);
-// 		}
-		
-// 		// Retrieve parameters from a channel
-// 		for (auto fitFunctionParameter : parameters)
-// 		{
-// 			auto parameter = fitFunctionParameter.getFunction();
-// 			std::vector<double> parameterValues;
-// 			for (int i = 0; i < parameter->GetNpar(); ++i)
-// 			{
-// 				parameterValues.push_back(parameter->GetParameter(i));
-// 			}
+std::map<std::string, std::vector<std::string>> getParameterLinesFromFile(std::string fileName, std::vector<string>* channelNames)
+{
+	std::ifstream signalFile(fileName);
+	if (!signalFile)
+	{
+		throw std::runtime_error("File " + fileName + " not found!");
+	}
+	std::string line;
+	std::map<std::string, std::vector<std::string>> parameters;
+	
+	std::string currentChannel;
+	std::vector<std::string> currentChannelNameLine;
+	while (std::getline(signalFile, line))
+	{
+		//std::cout << line << '\n';
+		// Check if the line denotes the start of a new channel section 
+		if (line.find("Channel") != std::string::npos)
+		{
+			currentChannelNameLine = splitLine(line);
+			currentChannel = currentChannelNameLine[1];
+			std::cout << "Current channel: " << currentChannel << "\n";
+			if (std::find(channelNames->begin(), channelNames->end(), currentChannel) == channelNames->end())
+			{
+				channelNames->push_back(currentChannel);
+			}
+		}
 
-// 			for (int i = 0; i < parameter->GetNpar(); ++i)
-// 			{
-// 				parameterValues.push_back(parameter->GetParError(i));
-// 			}
+		// Add line to current channel
+		parameters[currentChannel].push_back(line);
+	}
+	// for (std::string channel : *channelNames)
+	// {
+	// 	std::cout << "Number of parameter lines for " << channel << ": " << parameters[channel].size() << '\n';
+	// }
+	for (auto channel : *channelNames)
+	{
+		while (parameters[channel][channel.size()-1] == "")
+		{
+			parameters[channel].pop_back();
+		}
+	}
+	return parameters;
+}
 
-// 			parameters[channel].push_back(parameterValues);
-// 		}
-
-// 	}
-// 	return parameters;
-// }
 
 
-
-void construct_models_Higgs_5()
+void construct_models_Higgs_4()
 {
 	gROOT->SetBatch(true); // I can't remember what this does exactly, but it needs to be here
 
@@ -325,11 +253,7 @@ void construct_models_Higgs_5()
 	auto hist_X = file.Get<TTree>("Signal");
 	// auto hist_Y = file.Get<TTree>("Signal");      <------ When We Get both data sets, uncomment this and fix mc_Y below
 
-<<<<<<< HEAD
 	RooRealVar mass("mass", "mass", 900, 50, 2000); // This is the invariant mass (energy) of the event and is the independent variable for the background and Signal PDFs
-=======
-	RooRealVar mass("mass", "mass", 900, 400, 2000); // This is the invariant mass (energy) of the event and is the independent variable for the background and Signal PDFs
->>>>>>> 26faa2700ab3e558e75938fa85e04194e47df49f
 
 	// This converts the TTree to a RooDataSet correlated to / dependent on the mass RooRealVar.
 	RooDataSet mc_X("Events900_X","Events900", hist_X, RooArgSet(mass), "");
@@ -363,11 +287,8 @@ void construct_models_Higgs_5()
 	// For example, eeee_signal.getVal() will return the base value of the pdf (not normalized). eeee_signal.getVal(RooArgList(mass)) normalizes over the mass variable.	
 
 	// Not entirely sure what this does, since I would get issues if i didn't run these files before this one anyway, but its here...
-	// gROOT -> ProcessLineSync(".x RooPDF_DSCB_test.cxx+");
-	// gROOT -> ProcessLineSync(".x RooPDF_BKG.cxx+");
-	
-
-	
+	gROOT -> ProcessLineSync(".x RooPDF_DSCB_test.cxx+");
+	gROOT -> ProcessLineSync(".x RooPDF_BKG.cxx+");
 
 
 	// We will want to change how these lists are handled..
@@ -375,89 +296,14 @@ void construct_models_Higgs_5()
 	// std::vector<std::string> channel_names {"eeee", "eeeu", "eeuu", "eueu", "euuu", "uuuu"};
 	std::vector<std::string> channel_names;
 	std::vector<std::string> signs {"X", "Y"};
-	//std::vector<std::string> channelsToCheck = {"eeee_X", "eeee_Y", "uuuu_X", "uuuu_Y"};
 	std::vector<std::string> channelsToCheck = {"eeee", "uuuu"};
 
+
 	// Get signal and background parameters from files - Note: Update file paths later
-	std::string signalParamsFileName = "/uscms/home/bhobbs/Analysis/CMSSW_15_0_4/src/CMSAnalysis/Analysis/bin/fitting/H++SignalParameterFunctions.txt";
-	//std::string signalParamsFileName = "H++SignalParameterFunctions.txt";
-	std::string backgroundParamsFileName = "/uscms/home/bhobbs/Analysis/CMSSW_15_0_4/src/CMSAnalysis/Analysis/bin/fitting/OtherBackgroundFunctions.txt";
-	std::map<std::string, std::vector<FitFunction>> signalParameters = FitFunctionCollection::getFunctionsSortedByChannel(signalParamsFileName);
-	std::map<std::string, std::vector<FitFunction>> backgroundParameters = FitFunctionCollection::getFunctionsSortedByChannel(backgroundParamsFileName);  
-
-
-	std::vector<Channel> signalChannels = {};
-	std::vector<Channel> backgroundChannels = {};
-	
-	std::map<std::string,std::string> unmodifiedNames;
-	unmodifiedNames["eeee_eeee"] = "eeee";
-	unmodifiedNames["uuuu_uuuu"] = "uuuu";
-	for (auto [unmodifiedChannelName, fitFunctions] : signalParameters)
-	{
-		std::string channel = replaceAll(unmodifiedChannelName, "m", "u");
-	
-		
-		for (auto [unmodifiedName, replacement] : unmodifiedNames)
-		{
-			if (channel.find(unmodifiedName) != std::string::npos)
-			{
-				channel = replaceAll(channel, unmodifiedName, replacement);
-			} 
-		}
-		//if (channel.find("eeee") != std::string::npos)
-		Channel signalChannel(channel, fitFunctions);
-		signalChannels.push_back(signalChannel);
-	}
-
-	for (auto [unmodifiedChannelName, fitFunctions] : backgroundParameters)
-	{
-		std::string channel = replaceAll(unmodifiedChannelName, "m", "u");
-	
-		
-		for (auto [unmodifiedName, replacement] : unmodifiedNames)
-		{
-			if (channel.find(unmodifiedName) != std::string::npos)
-			{
-				channel = replaceAll(channel, unmodifiedName, replacement);
-			} 
-		}
-		Channel backgroundChannel(channel, fitFunctions);
-		backgroundChannels.push_back(backgroundChannel);
-	}
-
-	for (auto channel : signalChannels)
-	{
-		std::vector<std::vector<double>> parameters = channel.extractParameters();
-		std::cout << "Channel: " << channel.name << "\n" << "Extracted Signal Parameters size: " << parameters.size() << "\n";
-		for (auto doubleVector : parameters)
-		{
-			for (auto value : doubleVector)
-			{
-				std::cout << value << "\n";
-			}
-		}
-
-		std::cout << "\n \n \n";
-	}
-
-	for (auto channel : backgroundChannels)
-	{
-		std::vector<std::vector<double>> parameters = channel.extractParameters();
-		std::cout << "Channel: " << channel.name << "\n" << "Extracted Background Parameters size: " << parameters.size() << "\n";
-		for (auto doubleVector : parameters)
-		{
-			for (auto value : doubleVector)
-			{
-				std::cout << value << "\n";
-			}
-		}
-
-		std::cout << "\n \n \n";
-	}
-
-
-	//std::map<std::string, std::vector<std::vector<double>>> signalParams = getParameterValuesFromMap(signalParameters, &channel_names);
-	//std::map<std::string, std::vector<std::vector<double>>> backgroundParams = getParameterValuesFromMap(backgroundParameters, &channel_names);
+	std::string signalParamsFileName = "/uscms/home/dlimosne/analysis/CMSSW_15_0_4/src/CMSAnalysis/Analysis/bin/fitting/H++SignalParameterFunctionsFromBrookesOutputWithManuallyModifiedChannelNameFormat.txt";
+	std::string backgroundParamsFileName = "/uscms/home/dlimosne/analysis/CMSSW_15_0_4/src/CMSAnalysis/Analysis/bin/fitting/OtherBackgroundFunctionsWithManualModificationsToChannelNameFormat.txt";
+	std::map<std::string, std::vector<string>> signalParams = getParameterLinesFromFile(signalParamsFileName, &channel_names);
+	std::map<std::string, std::vector<string>> backgroundParams = getParameterLinesFromFile(backgroundParamsFileName, &channel_names);
 
 
 	std::vector<std::vector<RooPDF_DSCB_test>> signal_pdfs;
@@ -473,26 +319,25 @@ void construct_models_Higgs_5()
 	std::vector<std::vector<string>> bkg_NormalizationsNames;
 
 	std::vector<std::string> completedChannels;
-	for (std::string channel : channelsToCheck)
+	for (std::string channelXOrY : channel_names)
 	{
 
 		// Remove any X or Y modifiers to the channel name
-		// std::string channel = channelXOrY;
-		// std::cout << "Current channel with modifiers: " << channelXOrY << "\n";
-		// for (auto sign : signs)
-		// {
-		// 	channel = removeSubstring(channel, "_" + sign);
-		// }
-		// std::cout << "Channel without modifiers: " << channel << "\n";
-
-		// Check if the channel has already been processed
-		if (std::find(completedChannels.begin(), completedChannels.end(), channel) != completedChannels.end())
+		std::string channel = channelXOrY;
+		std::cout << "Current channel with modifiers: " << channelXOrY << "\n";
+		for (auto sign : signs)
 		{
-			std::cout << channel << " has already been processed" << "\n";
+			channel = removeSubstring(channel, "_" + sign);
+		}
+		std::cout << "Channel without modifiers: " << channel << "\n";
+
+		// Check if the channel is not a channel that we want to process or if it has already been processed
+		if (std::find(channelsToCheck.begin(), channelsToCheck.end(), channel) == channelsToCheck.end() || 
+		std::find(completedChannels.begin(), completedChannels.end(), channel) != completedChannels.end())
+		{
+			std::cout << channel << " has already been processed or is not a channel to be processed" << "\n";
 			continue;
 		}
-		
-		std::cout << "Processing " << channel << "channels" << "\n";
 
 		std::vector<RooPDF_DSCB_test> signal_X_and_Y;
 		std::vector<std::string> signal_X_and_YNames;
@@ -511,24 +356,7 @@ void construct_models_Higgs_5()
 		for(std::string X_or_Y : signs)
 		{
 			channelX_or_Y = channel + "_" + X_or_Y;
-			Channel* currentSignalChannel = nullptr;
-			Channel* currentBackgroundChannel = nullptr;
-			for (auto& channel : signalChannels)
-			{
-				if (channel.name == channelX_or_Y)
-				{
-					currentSignalChannel = &channel;
-				}
-			}
-			for (auto& channel : backgroundChannels)
-			{
-				if (channel.name == channelX_or_Y)
-				{
-					currentBackgroundChannel = &channel;
-				}
-			}
-
-			RooPDF_DSCB_test signal_pdf(create_signal_pdf(channel, *currentSignalChannel, mass, realHiggsMass, Bee, Beu, norm_Systematic, shape_Systematic), (channel + "_signal_" + X_or_Y).c_str());
+			RooPDF_DSCB_test signal_pdf(create_signal_pdf(channel, signalParams[channelX_or_Y], mass, realHiggsMass, Bee, Beu, norm_Systematic, shape_Systematic), (channel + "_signal_" + X_or_Y).c_str());
 			std::cout << "signal_pdf successfully created for " << channelX_or_Y << "\n";
 			signal_X_and_Y.push_back(signal_pdf);
 			signal_X_and_YNames.push_back(channel + "_signal_" + X_or_Y);
@@ -537,7 +365,7 @@ void construct_models_Higgs_5()
 			signal_X_and_Y_Normalizations.push_back(signal_pdf.signal_norm(channel + "_signal_" + X_or_Y));
 			signal_X_and_Y_NormalizationsNames.push_back(channel + "_signal_" + X_or_Y);
 
-			RooPDF_BKG bkg_pdf(create_bkg_pdf(channel, *currentBackgroundChannel, mass), (channel + "_bkg_" + X_or_Y).c_str());
+			RooPDF_BKG bkg_pdf(create_bkg_pdf(channel, backgroundParams[channelX_or_Y], mass), (channel + "_bkg_" + X_or_Y).c_str());
 			std::cout << "background_pdf successfully created for " << channelX_or_Y << "\n";
 			bkg_X_and_Y.push_back(bkg_pdf);
 			bkg_X_and_YNames.push_back(channel + "_bkg_" + X_or_Y);
@@ -606,81 +434,80 @@ void construct_models_Higgs_5()
 
 	// std::vector<std::vector<RooRealVar>> bkg_Normalizations;
 	// std::vector<std::vector<string>> bkg_NormalizationsNames;	
-	std::cout << "signal_pdfs:" << "\n";
-	for (auto variable : signal_pdfsNames)
-	{
-		for (auto name : variable)
-		{
-			std::cout << name << "\n";
+	// std::cout << "signal_pdfs:" << "\n";
+	// for (auto variable : signal_pdfsNames)
+	// {
+	// 	for (auto name : variable)
+	// 	{
+	// 		std::cout << name << "\n";
 
-		}
-	}
-	std::cout << "\n";
+	// 	}
+	// }
+	// std::cout << "\n";
 
-	std::cout << "bkg_pdfs:" << "\n";
-	for (auto variable : bkg_pdfsNames) 
-	{
-		for (auto name : variable)
-		{
-			std::cout << name << "\n";
-		}		
-	}
-	std::cout << "\n";
+	// std::cout << "bkg_pdfs:" << "\n";
+	// for (auto variable : bkg_pdfsNames) 
+	// {
+	// 	for (auto name : variable)
+	// 	{
+	// 		std::cout << name << "\n";
+	// 	}		
+	// }
+	// std::cout << "\n";
 
-	std::cout << "signalNormalizations:" << "\n";
-	for (auto variable : signal_NormalizationsNames)
-	{
-		for (auto name : variable)
-		{
-			std::cout << name << "\n";
-		}
+	// std::cout << "signalNormalizations:" << "\n";
+	// for (auto variable : signal_NormalizationsNames)
+	// {
+	// 	for (auto name : variable)
+	// 	{
+	// 		std::cout << name << "\n";
+	// 	}
 
-	}
-	std::cout << "\n";
+	// }
+	// std::cout << "\n";
 
-	std::cout << "bkgNormalizations:" << "\n";
-	for (auto variable : bkg_NormalizationsNames)
-	{
-		for (auto name : variable)
-		{
-			std::cout << name << "\n";
-		}
+	// std::cout << "bkgNormalizations:" << "\n";
+	// for (auto variable : bkg_NormalizationsNames)
+	// {
+	// 	for (auto name : variable)
+	// 	{
+	// 		std::cout << name << "\n";
+	// 	}
 
-	}
-	std::cout << "\n";
+	// }
+	// std::cout << "\n";
 
-	std::cout << "signal_pdfs size: " << signal_pdfs.size() << "\n";
-	std::cout << "signal_pdfs[0] size: " << signal_pdfs[0].size() << "\n";
-	std::cout << "signal_pdfs[1] size: " << signal_pdfs[1].size() << "\n" << "\n";
-
-
-	std::cout << "bkg_pdfs size: " << bkg_pdfs.size() << "\n";
-	std::cout << "bkg_pdfs[0] size: " << bkg_pdfs[0].size() << "\n";
-	std::cout << "bkg_pdfs[1] size: " << bkg_pdfs[1].size() << "\n" << "\n";
+	// std::cout << "signal_pdfs size: " << signal_pdfs.size() << "\n";
+	// std::cout << "signal_pdfs[0] size: " << signal_pdfs[0].size() << "\n";
+	// std::cout << "signal_pdfs[1] size: " << signal_pdfs[1].size() << "\n" << "\n";
 
 
-	std::cout << "signal_normalizations size: " << signal_Normalizations.size() << "\n"; 
-	std::cout << "signal_Normalizations[0] size: " << signal_Normalizations[0].size() << "\n";
-	std::cout << "signal_Normalizations[1] size: " << signal_Normalizations[1].size() << "\n" << "\n";
+	// std::cout << "bkg_pdfs size: " << bkg_pdfs.size() << "\n";
+	// std::cout << "bkg_pdfs[0] size: " << bkg_pdfs[0].size() << "\n";
+	// std::cout << "bkg_pdfs[1] size: " << bkg_pdfs[1].size() << "\n" << "\n";
+
+
+	// std::cout << "signal_normalizations size: " << signal_Normalizations.size() << "\n"; 
+	// std::cout << "signal_Normalizations[0] size: " << signal_Normalizations[0].size() << "\n";
+	// std::cout << "signal_Normalizations[1] size: " << signal_Normalizations[1].size() << "\n" << "\n";
 
 
 
 
-	std::cout << "bkg_Normalizations size: " << bkg_Normalizations.size() << "\n";
-	std::cout << "bkg_Normalizations[0] size: " << bkg_Normalizations[0].size() << "\n";
-	std::cout << "bkg_Normalizations[1] size: " << bkg_Normalizations[1].size() << "\n" << "\n";
+	// std::cout << "bkg_Normalizations size: " << bkg_Normalizations.size() << "\n";
+	// std::cout << "bkg_Normalizations[0] size: " << bkg_Normalizations[0].size() << "\n";
+	// std::cout << "bkg_Normalizations[1] size: " << bkg_Normalizations[1].size() << "\n" << "\n";
 
-	std::cout << "Channels to look for:" << "\n";
-	for (auto channel : channel_names)
-	{
-		std::cout << channel << "\n";
-	}
-	std::cout << "\n \n \n";
+	// std::cout << "Channels to look for:" << "\n";
+	// for (auto channel : channel_names)
+	// {
+	// 	std::cout << channel << "\n";
+	// }
+	// std::cout << "\n \n \n";
 
 	
 	for (int i=0; i < channelsToCheck.size(); i++)
 	{
-		std::cout << "Importing channel " << i << "\n";
 		for (int j=0; j < signs.size(); j++)
 		{
 			std::cout << "Importing " << signal_pdfs[i][j].GetName() << " " << w_sig.arg(signal_pdfs[i][j].GetName()) << "\n";
