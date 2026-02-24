@@ -20,7 +20,7 @@
 ClassImp(RooPDF_BKG_DeltaAdditionTest);
 
 RooPDF_BKG_DeltaAdditionTest::RooPDF_BKG_DeltaAdditionTest(const char *name, const char *title,
-                        RooAbsReal& _x, const double _delta, const std::vector<std::vector<double>>& _bkg_params,
+                        RooAbsReal& _x, const double _shapeSystematic, const std::vector<std::vector<double>>& _bkg_params,
                         const std::vector<std::vector<double>>& _bkg_paramUpperValues,
                         const std::vector<std::vector<double>>& _bkg_paramLowerValues,
                         const std::string _channel_name)
@@ -30,7 +30,7 @@ RooPDF_BKG_DeltaAdditionTest::RooPDF_BKG_DeltaAdditionTest(const char *name, con
    bkg_paramUpperValues(_bkg_paramUpperValues),
    bkg_paramLowerValues(_bkg_paramLowerValues),
    channel_name(_channel_name),
-   delta(_delta)
+   shape_systematic(_shapeSystematic)
 {
 }
 

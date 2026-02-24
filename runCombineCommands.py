@@ -2,14 +2,15 @@ import subprocess
 import re
 
 lowerBound = 500
-upperBound = 1500
+upperBound = 500
 step = 100
 n = int((upperBound - lowerBound) / step)
 massArray = []
 for  i in range(n + 1):
 	massArray.append(lowerBound + i * step)
 
-file_name = "eeee-uuuuChannelsOnly.root"
+#file_name = "eeee-uuuuChannelsOnly.root"
+file_name = "eeeeChannelOnly.root" 
 # Use this for no systematics (make sure to put systematics here as final)
 # file_name = "Signal_datacards/datacard_Higgs_Combined.root"
 # Use this for no systematics testing with only a single channel
@@ -43,7 +44,7 @@ for mass in massArray:
 		 #"--tries", "200",
 		"-i", "20000",
 		"-b", "20",
-		"-t", "1",
+		"-t", "20",
 		"--toysNoSystematics",
 		"-v", "3"
 	],

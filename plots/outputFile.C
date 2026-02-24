@@ -4,7 +4,7 @@
 void outputFile()
 {
 //=========Macro generated from canvas: cCL/cCL
-//=========  (Wed Nov 12 14:25:29 2025) by ROOT version 6.30/07
+//=========  (Wed Jan 14 13:34:48 2026) by ROOT version 6.30/07
    TCanvas *cCL = new TCanvas("cCL", "cCL",0,0,600,450);
    gStyle->SetOptStat(0);
    cCL->SetHighLightColor(2);
@@ -59,11 +59,11 @@ void outputFile()
    DummyGraph->GetZaxis()->SetTitleFont(42);
    DummyGraph->Draw("");
    
-   Double_t Graph0_fx1[20] = { 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1500, 1400, 1300, 1200, 1100, 1000, 900,
-   800, 700, 600 };
-   Double_t Graph0_fy1[20] = { 7.647099e-05, 7.645894e-05, 7.645894e-05, 7.645894e-05, 7.653887e-05, 7.653887e-05, 7.231569e-05, 3.202518e-05, 3.302445e-05, 3.302445e-05, 3.302445e-05, 3.302445e-05, 3.202518e-05, 7.231569e-05, 7.653887e-05, 7.653887e-05, 7.645894e-05,
-   7.645894e-05, 7.645894e-05, 7.647099e-05 };
-   TGraph *graph = new TGraph(20,Graph0_fx1,Graph0_fy1);
+   Double_t Graph0_fx1[22] = { 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1500, 1400, 1300, 1200, 1100, 1000,
+   900, 800, 700, 600, 500 };
+   Double_t Graph0_fy1[22] = { 3.254212e-05, 2.109213e-05, 1.416401e-05, 9.957762e-06, 8.912859e-06, 7.80683e-06, 7.454115e-06, 7.29888e-06, 6.869972e-06, 6.810121e-06, 5.18658e-06, 1.103365e-05, 1.583519e-05, 1.366822e-05, 2.02188e-05, 2.09864e-05, 2.447059e-05,
+   3.002687e-05, 3.11607e-05, 3.430845e-05, 7.436435e-05, 0.01160868 };
+   TGraph *graph = new TGraph(22,Graph0_fx1,Graph0_fy1);
    graph->SetName("Graph0");
    graph->SetTitle("Graph");
 
@@ -71,9 +71,9 @@ void outputFile()
    graph->SetFillColor(ci);
    graph->SetFillStyle(1000);
    
-   TH1F *Graph_Graph01 = new TH1F("Graph_Graph01","Graph",100,510,1590);
-   Graph_Graph01->SetMinimum(2.757381e-05);
-   Graph_Graph01->SetMaximum(8.099024e-05);
+   TH1F *Graph_Graph01 = new TH1F("Graph_Graph01","Graph",100,400,1600);
+   Graph_Graph01->SetMinimum(4.667922e-06);
+   Graph_Graph01->SetMaximum(0.01276903);
    Graph_Graph01->SetDirectory(nullptr);
    Graph_Graph01->SetStats(0);
 
@@ -91,19 +91,19 @@ void outputFile()
    
    graph->Draw("f");
    
-   Double_t Graph1_fx3001[20] = { 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1500, 1400, 1300, 1200, 1100, 1000, 900,
-   800, 700, 600 };
-   Double_t Graph1_fy3001[20] = { 7.647099e-05, 7.645894e-05, 7.645894e-05, 7.645894e-05, 7.653887e-05, 7.653887e-05, 7.231569e-05, 3.202518e-05, 3.302445e-05, 3.302445e-05, 3.302445e-05, 3.302445e-05, 3.202518e-05, 7.231569e-05, 7.653887e-05, 7.653887e-05, 7.645894e-05,
-   7.645894e-05, 7.645894e-05, 7.647099e-05 };
-   Double_t Graph1_felx3001[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-   0, 0, 0 };
-   Double_t Graph1_fely3001[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-   0, 0, 0 };
-   Double_t Graph1_fehx3001[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-   0, 0, 0 };
-   Double_t Graph1_fehy3001[20] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-   0, 0, 0 };
-   TGraphAsymmErrors *grae = new TGraphAsymmErrors(20,Graph1_fx3001,Graph1_fy3001,Graph1_felx3001,Graph1_fehx3001,Graph1_fely3001,Graph1_fehy3001);
+   Double_t Graph1_fx3001[22] = { 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1500, 1400, 1300, 1200, 1100, 1000,
+   900, 800, 700, 600, 500 };
+   Double_t Graph1_fy3001[22] = { 4.355894e-05, 2.424886e-05, 1.727044e-05, 1.162658e-05, 1.215294e-05, 8.953948e-06, 8.452763e-06, 8.11467e-06, 7.245341e-06, 7.989012e-06, 5.823468e-06, 1.036437e-05, 1.35217e-05, 1.268729e-05, 1.479407e-05, 1.634794e-05, 1.927835e-05,
+   2.51788e-05, 2.676402e-05, 2.935057e-05, 6.564105e-05, 8.098357e-05 };
+   Double_t Graph1_felx3001[22] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0 };
+   Double_t Graph1_fely3001[22] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0 };
+   Double_t Graph1_fehx3001[22] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0 };
+   Double_t Graph1_fehy3001[22] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+   0, 0, 0, 0, 0 };
+   TGraphAsymmErrors *grae = new TGraphAsymmErrors(22,Graph1_fx3001,Graph1_fy3001,Graph1_felx3001,Graph1_fehx3001,Graph1_fely3001,Graph1_fehy3001);
    grae->SetName("Graph1");
    grae->SetTitle("Graph");
 
@@ -111,9 +111,9 @@ void outputFile()
    grae->SetFillColor(ci);
    grae->SetFillStyle(1000);
    
-   TH1F *Graph_Graph13001 = new TH1F("Graph_Graph13001","Graph",100,510,1590);
-   Graph_Graph13001->SetMinimum(2.757381e-05);
-   Graph_Graph13001->SetMaximum(8.099024e-05);
+   TH1F *Graph_Graph13001 = new TH1F("Graph_Graph13001","Graph",100,400,1600);
+   Graph_Graph13001->SetMinimum(5.241121e-06);
+   Graph_Graph13001->SetMaximum(8.849958e-05);
    Graph_Graph13001->SetDirectory(nullptr);
    Graph_Graph13001->SetStats(0);
 
@@ -131,18 +131,18 @@ void outputFile()
    
    grae->Draw("f");
    
-   Double_t Graph2_fx2[10] = { 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500 };
-   Double_t Graph2_fy2[10] = { 7.647099e-05, 7.645894e-05, 7.645894e-05, 7.645894e-05, 7.653887e-05, 7.653887e-05, 7.231569e-05, 3.202518e-05, 3.302445e-05, 3.302445e-05 };
-   graph = new TGraph(10,Graph2_fx2,Graph2_fy2);
+   Double_t Graph2_fx2[11] = { 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500 };
+   Double_t Graph2_fy2[11] = { 5.612459e-05, 3.58316e-05, 2.254305e-05, 1.807254e-05, 1.571959e-05, 1.237761e-05, 1.129639e-05, 1.117903e-05, 9.422117e-06, 9.313042e-06, 8.046556e-06 };
+   graph = new TGraph(11,Graph2_fx2,Graph2_fy2);
    graph->SetName("Graph2");
    graph->SetTitle("Graph");
    graph->SetFillStyle(1000);
    graph->SetLineStyle(2);
    graph->SetLineWidth(2);
    
-   TH1F *Graph_Graph22 = new TH1F("Graph_Graph22","Graph",100,510,1590);
-   Graph_Graph22->SetMinimum(2.757381e-05);
-   Graph_Graph22->SetMaximum(8.099024e-05);
+   TH1F *Graph_Graph22 = new TH1F("Graph_Graph22","Graph",100,400,1600);
+   Graph_Graph22->SetMinimum(3.238752e-06);
+   Graph_Graph22->SetMaximum(6.09324e-05);
    Graph_Graph22->SetDirectory(nullptr);
    Graph_Graph22->SetStats(0);
 
