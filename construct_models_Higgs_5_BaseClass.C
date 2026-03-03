@@ -31,7 +31,8 @@
 #include "RooClassFactory.h"
 #include "RooPDF_HiggsAnalysis_Base.h"
 #include "RooPDF_HiggsAnalysis_DSCB.h"
-#include "RooPDF_BKG.h"
+#include "RooPDF_HiggsAnalysis_BKG.h"
+#include "RooPDF_HiggsAnalysis_BKG.h"
 #include "RooArgList.h"
 #include "RooGenericPdf.h"
 #include "CMSAnalysis/Analysis/interface/FitFunction.hh"
@@ -60,7 +61,9 @@ std::vector<std::string> splitLine(const std::string& str);
 std::vector<std::vector<double>> getParameters(std::vector<std::string> channelParameters);
 TGraph makeGraph(double numCoords, std::vector<double>& xCoords, std::vector<double>& yCoords);
 
-RooPDF_BKG create_bkg_pdf(std::string channel_name, std::vector<std::string> parameterSet, RooRealVar& mass);
+RooArgList create_bkg_pdf(std::string channel_name,
+                          Channel backgroundChannel, 
+                          RooRealVar& mass, RooRealVar& realHiggsMass, RooRealVar& branch_1, RooRealVar& branch_2, RooRealVar& norm_Systematic, RooRealVar& shape_Systematic);
 RooArgList create_signal_pdf(std::string channel_name, std::vector<std::string> parameterSet, RooRealVar& mass, RooRealVar& realHiggsMass, RooRealVar& branch_1, RooRealVar& branch_2, RooRealVar& norm_Systematic, RooRealVar& shape_Systematic);
 RooFormulaVar get_signal_norm(std::string channel_name, std::vector<std::string> parameterSet, RooRealVar& realHiggsMass);
 std::map<std::string, std::vector<double>> getParameterValuesFromMap(std::string fileName, std::vector<string>* channelNames);
@@ -287,13 +290,38 @@ RooFormulaVar get_signal_norm(std::string channel_name, std::vector<std::string>
 	return norm;
 }
 
-// Creates a RooPDF_BKG Object 
-RooPDF_BKG create_bkg_pdf(std::string channel_name, Channel backgroundChannel, RooRealVar& mass)
+// Creates a RooPDF_HiggsAnalysis_BKG Object 
+RooArgList create_bkg_pdf(std::string channel_name,
+                          Channel backgroundChannel, 
+                          RooRealVar& mass, RooRealVar& realHiggsMass, RooRealVar& branch_1, RooRealVar& branch_2, RooRealVar& norm_Systematic, RooRealVar& shape_Systematic, std::string X_or_Y)
 {
-	std::vector<std::vector<double>> bkg_types_params = backgroundChannel.extractParameters();
-	// (The naming stuff is for consistency, I don't think it matters since I am copying the object out of the function anyway)
-	RooPDF_BKG pdf((channel_name + "_bkg").c_str(), (channel_name + "_bkg").c_str(), mass, bkg_types_params, channel_name); 
-	return pdf;
+    std::vector<std::vector<double>> bkg_types_params = backgroundChannel.extractParameters();
+
+    auto* pdf = new RooPDF_HiggsAnalysis_BKG(
+        (channel_name + "_bkg_" + X_or_Y).c_str(),
+        (channel_name + "_bkg").c_str(),
+        mass, 
+		realHiggsMass, 
+		branch_1, 
+		branch_2, 
+		norm_Systematic, 
+		shape_Systematic,
+        bkg_types_params,
+        channel_name
+    );
+
+    std::cout << "Class Name Before Adding to List: ";
+    pdf->printClassName(std::cout);
+    std::cout << "\n";
+
+    RooArgList list;
+    list.add(*pdf);
+
+    std::cout << "Class Name After Adding to List: ";
+    list.at(0)->printClassName(std::cout);
+    std::cout << "\n";
+
+    return list;
 }
 
 // std::map<std::string, std::vector<std::vector<double>>> getParametersFromMap(std::map<std::string, std::vector<FitFunction>> sortedFunctions, std::vector<string>* channelNames)
@@ -546,7 +574,7 @@ void construct_models_Higgs_5_BaseClass()
 	std::vector<std::vector<RooArgList>> signal_pdfs;
 	std::vector<std::vector<string>> signal_pdfsNames;
 
-	std::vector<std::vector<RooPDF_BKG>> bkg_pdfs;
+	std::vector<std::vector<RooArgList>> bkg_pdfs;
 	std::vector<std::vector<string>> bkg_pdfsNames;
 
 	std::vector<std::vector<RooFormulaVar>> signal_Normalizations;
@@ -579,7 +607,7 @@ void construct_models_Higgs_5_BaseClass()
 		std::vector<std::string> signal_X_and_YNames;
 
 
-		std::vector<RooPDF_BKG> bkg_X_and_Y;
+		std::vector<RooArgList> bkg_X_and_Y;
 		std::vector<std::string> bkg_X_and_YNames;
 		
 		std::vector<RooFormulaVar> signal_X_and_Y_Normalizations;
@@ -637,47 +665,23 @@ void construct_models_Higgs_5_BaseClass()
 			// RooFormulaVar signal_norm(get_signal_norm(channel, realHiggsMass), (channel+"_signal_" + X_or_Y + "_norm").c_str());
 			// signal_X_and_Y_Normalizations.push_back(signal_norm);
 
-
-			// Debug signal_pdf behavior
-			std::cout << "Name After Adding to List In Main Function: ";
-			std::cout << signal_pdf.at(0)->GetName() << "\n";
-			std::cout << "Class Name After Adding to List In Main Function: ";
-			signal_pdf.at(0)->printClassName(std::cout);
-			std::cout << "\n \n";
-
-			auto pdf = static_cast<RooPDF_HiggsAnalysis_Base*>(signal_pdf.at(0));
-
-			// if (signal_pdf.at(0)->InheritsFrom(RooPDF_HiggsAnalysis_Base::Class())) {
-				// std::cout << "yay" << "\n";
-			// }
-
-			if (!pdf)
-			{
-				std::cout << "original: " << signal_pdf.at(0) << '\n';
-				std::cout << "cast: " << pdf << '\n';
-				std::cout << typeid(signal_pdf.at(0)).name() << std::endl;
-				std::cout << "Class Name: " << signal_pdf.at(0)->ClassName() << "\n";
-				throw std::runtime_error(
-					"signal_pdf[0] is not a RooPDF_HiggsAnalysis_Base"
-				);
-			}
+			auto signal_pdf_for_norm = static_cast<RooPDF_HiggsAnalysis_Base*>(signal_pdf.at(0));
 
 
 			signal_X_and_Y_Normalizations.push_back(
-				pdf->signal_norm(channel + "_signal_" + X_or_Y)
+				signal_pdf_for_norm->signal_norm(channel + "_signal_" + X_or_Y)
 			);
 
-			// signal_X_and_Y_Normalizations.push_back(dynamic_cast<RooPDF_HiggsAnalysis_Base*>(signal_pdf.at(0))->signal_norm(channel + "_signal_" + X_or_Y));
-			std::cout << "error3" << "\n";
-			signal_X_and_Y_NormalizationsNames.push_back(channel + "_signal_" + X_or_Y);
-			std::cout << "error4" << "\n";
-			RooPDF_BKG bkg_pdf(create_bkg_pdf(channel, *currentBackgroundChannel, mass), (channel + "_bkg_" + X_or_Y).c_str());
+			RooArgList bkg_pdf(create_bkg_pdf(channel, *currentBackgroundChannel, mass, realHiggsMass, Bee, Beu, norm_Systematic, shape_Systematic,  X_or_Y), (channel + "_bkg_" + X_or_Y).c_str());
 			std::cout << "background_pdf successfully created for " << channelX_or_Y << "\n";
 			bkg_X_and_Y.push_back(bkg_pdf);
 			bkg_X_and_YNames.push_back(channel + "_bkg_" + X_or_Y);
 
-			RooRealVar bkg_norm((channel + "_bkg_" + X_or_Y + "_norm").c_str(), (channel + "_bkg_" + X_or_Y +"_norm").c_str(), bkg_pdf.getNorm(mass));
+			auto bkg_pdf_for_norm = static_cast<RooPDF_HiggsAnalysis_Base*>(bkg_pdf.at(0));
+			
+			RooRealVar bkg_norm((channel + "_bkg_" + X_or_Y + "_norm").c_str(), (channel + "_bkg_" + X_or_Y +"_norm").c_str(), bkg_pdf_for_norm->getNorm(mass));
 			bkg_norm.setConstant(true);
+
 			bkg_X_and_Y_Normalizations.push_back(bkg_norm);
 			bkg_X_and_Y_NormalizationsNames.push_back(channel + "_bkg_" + X_or_Y + "_norm");
 			std::cout << "Signal and background functions created for " << channel << "_" << X_or_Y << '\n';
@@ -718,7 +722,7 @@ void construct_models_Higgs_5_BaseClass()
 	// 	std::vector<std::string> signal_X_and_YNames;
 
 
-	// 	std::vector<RooPDF_BKG> bkg_X_and_Y;
+	// 	std::vector<RooPDF_HiggsAnalysis_BKG> bkg_X_and_Y;
 	// 	std::vector<std::string> bkg_X_and_YNames;
 		
 	// 	std::vector<RooFormulaVar> signal_X_and_Y_Normalizations;
@@ -732,7 +736,7 @@ void construct_models_Higgs_5_BaseClass()
 	// std::vector<std::vector<RooPDF_DSCB_test>> signal_pdfs;
 	// std::vector<std::vector<string>> signal_pdfsNames;
 
-	// std::vector<std::vector<RooPDF_BKG>> bkg_pdfs;
+	// std::vector<std::vector<RooPDF_HiggsAnalysis_BKG>> bkg_pdfs;
 	// std::vector<std::vector<string>> bkg_pdfsNames;
 
 	// std::vector<std::vector<RooFormulaVar>> signal_Normalizations;
@@ -821,9 +825,9 @@ void construct_models_Higgs_5_BaseClass()
 			w_sig.import(*signal_pdfs[i][j].at(0));
 			std::cout << "Import successful: " << w_sig.arg(dynamic_cast<RooPDF_HiggsAnalysis_Base*>(signal_pdfs[i][j].at(0)) -> GetName()) << "\n ____ \n";
 
-			std::cout << "Importing BKG PDF " << bkg_pdfs[i][j].GetName() << "\n";
-			w_sig.import(bkg_pdfs[i][j]);
-			std::cout << "Import successful: " << w_sig.arg(bkg_pdfs[i][j].GetName()) << "\n ____ \n";
+			std::cout << "Importing BKG PDF " << dynamic_cast<RooPDF_HiggsAnalysis_Base*>(bkg_pdfs[i][j].at(0)) -> GetName() << "\n";
+			w_sig.import(*bkg_pdfs[i][j].at(0));
+			std::cout << "Import successful: " << w_sig.arg(dynamic_cast<RooPDF_HiggsAnalysis_Base*>(bkg_pdfs[i][j].at(0)) -> GetName()) << "\n ____ \n";
 
 			std::cout << "Importing Signal Normalization " << signal_Normalizations[i][j].GetName() << " " << w_sig.arg(signal_Normalizations[i][j].GetName()) << "\n";
 			w_sig.import(signal_Normalizations[i][j]);

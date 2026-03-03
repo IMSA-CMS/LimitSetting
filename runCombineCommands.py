@@ -9,7 +9,7 @@ massArray = []
 for  i in range(n + 1):
 	massArray.append(lowerBound + i * step)
 
-file_name = "eeee-uuuuChannelsOnly.root"
+#file_name = "eeee-uuuuChannelsOnly.root"
 # Use this for no systematics (make sure to put systematics here as final)
 # file_name = "Signal_datacards/datacard_Higgs_Combined.root"
 # Use this for no systematics testing with only a single channel
@@ -18,13 +18,9 @@ file_name = "eeee-uuuuChannelsOnly.root"
 # Use this for systematics testing
 #file_name = "Signal_datacards/datacard_Higgs_Combined_copy.root"
 #file_name = "Signal_datacards/datacard_Higgs_Combined_copy2.root"
-<<<<<<< HEAD
-file_name = "Signal_datacards/datacard_Higgs_Combined.root"
-=======
-#file_name = "Signal_datacards/datacard_Higgs_Combined_copy3.root"
->>>>>>> 26faa2700ab3e558e75938fa85e04194e47df49f
+#file_name = "Signal_datacards/datacard_Higgs_Combined.root"
 # Use this for systematics testing for only a single channel
-#file_name = "Signal_datacards/datacard_eeee_X_copyForSystematicsTesting.root"
+file_name = "Signal_datacards/datacard_eeee_X_copyForSystematicsTesting.root"
 
 terminal_outputs = []
 counter = 0
@@ -42,9 +38,9 @@ for mass in massArray:
 		"--freezeParameters", "realHiggsMass,b_ee,b_eu",
 		"--setParameters", f"realHiggsMass={mass},b_ee=1,b_eu=1",
 		"-m", "1000",
-		"-L", "RooPDF_DSCB_test_cxx.so",
-		"-L", "RooPDF_BKG_cxx.so",
-		"-L", "RooPDF_DBLGAUSS_cxx.so",
+		"-L", "RooPDF_HiggsAnalysis_DSCB_cxx.so",
+		"-L", "RooPDF_HiggsAnalysis_Base_cxx.so",
+		"-L", "RooPDF_HiggsAnalysis_BKG_cxx.so",
 		 #"--tries", "200",
 		"-i", "20000",
 		"-b", "20",
@@ -78,7 +74,8 @@ for terminal_output in terminal_outputs:
 	band_95_array.append(band_95)
 
 
-with open('realHiggsMass,medianLimit_fromCombineCommands.txt', 'w') as file:
+
+with open('higgsLimits.txt', 'w') as file:
 	file.write("mass".ljust(8) + "median Limit".ljust(16) + "1_Sigma Lower".ljust(16) + "1_Sigma Upper".ljust(16) + "2_Sigma Lower".ljust(16) + "2_Sigma Upper".ljust(16) + "\n")
 	for i in range(n+1):
 		file.write(f"{str(massArray[i]).ljust(7)} {str(median_limit_array[i]).ljust(15)} {str(band_68_array[i][0]).ljust(15)} {str(band_68_array[i][1]).ljust(15)} {str(band_95_array[i][0]).ljust(15)} {str(band_95_array[i][1]).ljust(15)} \n")

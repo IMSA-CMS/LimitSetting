@@ -6,45 +6,52 @@
 
 // Your description goes here...
 
-#include "Riostream.h"
+#include "RooPDF_HiggsAnalysis_DBLGAUSS.h"
 
-#include "RooPDF_DBLGAUSS.h"
-#include "RooAbsReal.h" 
-#include "RooArgList.h"
-#include "RooAbsCategory.h" 
-#include <math.h> 
-#include "TMath.h"
-#include "RooFormulaVar.h"  
+#include <RooAbsReal.h>
+#include <RooAbsCategory.h>
 
-ClassImp(RooPDF_DBLGAUSS);
+#include <Riostream.h>
+#include <TMath.h>
 
-RooPDF_DBLGAUSS::RooPDF_DBLGAUSS(const char *name, const char *title,
+#include <cmath>
+
+ClassImp(RooPDF_HiggsAnalysis_DBLGAUSS);
+
+RooPDF_HiggsAnalysis_DBLGAUSS::RooPDF_HiggsAnalysis_DBLGAUSS(const char *name, const char *title,
                         RooAbsReal& _x,
                         RooAbsReal& _realHiggsMass,
                         RooAbsReal& _branch_ratio_1,
                         RooAbsReal& _branch_ratio_2,
+                        RooAbsReal& _norm_Systematic,
+                        RooAbsReal& _shape_Systematic, 
                         const std::vector<std::vector<double>>& _signal_params,
-                        bool _multiplyBy2) : 
-   RooAbsPdf(name,title),
+                        bool _multiplyBy2)
+   : RooPDF_HiggsAnalysis_Base(name,title),
    x("x","x",this,_x),
    realHiggsMass("realHiggsMass","realHiggsMass",this,_realHiggsMass),
    branch_ratio_1("branch_ratio_1","branch_ratio_1",this,_branch_ratio_1),
    branch_ratio_2("branch_ratio_2","branch_ratio_2",this,_branch_ratio_2),
+   norm_Systematic("norm_Systematic","norm_Systematic",this,_norm_Systematic),
+   shape_Systematic("shape_Systematic","shape_Systematic",this,_shape_Systematic),
    signal_params(_signal_params),
    multiplyBy2(_multiplyBy2)
 {
 }
 
-RooPDF_DBLGAUSS::RooPDF_DBLGAUSS(RooPDF_DBLGAUSS const &other, const char *name)
-   : RooAbsPdf(other,name),
+RooPDF_HiggsAnalysis_DBLGAUSS::RooPDF_HiggsAnalysis_DBLGAUSS(RooPDF_HiggsAnalysis_DBLGAUSS const &other, const char *name)
+   : RooPDF_HiggsAnalysis_Base(other,name),
    x("x",this,other.x),
    realHiggsMass("realHiggsMass",this,other.realHiggsMass),
    branch_ratio_1("branch_ratio_1",this,other.branch_ratio_1),
    branch_ratio_2("branch_ratio_2",this,other.branch_ratio_2),
+   norm_Systematic("norm_Systematic",this,other.norm_Systematic),
+   shape_Systematic("shape_Systematic",this,other.shape_Systematic),
    signal_params(other.signal_params),
    multiplyBy2(other.multiplyBy2)
 {
 }
+
 
 RooFormulaVar RooPDF_DBLGAUSS::signal_norm(std::string channel_name)
 {
@@ -53,10 +60,9 @@ RooFormulaVar RooPDF_DBLGAUSS::signal_norm(std::string channel_name)
 	return norm;
 }
 
-
-double RooPDF_DBLGAUSS::evaluate() const 
+double RooPDF_HiggsAnalysis_DBLGAUSS::evaluate() const 
 {
-    double alpha_l = signal_params[0][0] * std::pow((realHiggsMass - signal_params[0][1]), signal_params[0][2]) + signal_params[0][3];
+   double alpha_l = signal_params[0][0] * std::pow((realHiggsMass - signal_params[0][1]), signal_params[0][2]) + signal_params[0][3];
 	double alpha_h = signal_params[1][0] * std::pow((realHiggsMass - signal_params[1][1]), signal_params[1][2]) + signal_params[1][3];
 	double n_l = signal_params[2][0] * std::pow((realHiggsMass - signal_params[2][1]), signal_params[2][2]) + signal_params[2][3];
 	double n_h = signal_params[3][0] * std::pow((realHiggsMass - signal_params[3][1]), signal_params[3][2]) + signal_params[3][3];
@@ -105,8 +111,7 @@ double RooPDF_DBLGAUSS::evaluate() const
 	}
 }
 
-
-void RooPDF_DBLGAUSS::printParameters()
+void RooPDF_HiggsAnalysis_DBLGAUSS::printParameters()
 {
    double alpha_l = signal_params[0][0] * std::pow((realHiggsMass - signal_params[0][1]), signal_params[0][2]) + signal_params[0][3];
 	double alpha_h = signal_params[1][0] * std::pow((realHiggsMass - signal_params[1][1]), signal_params[1][2]) + signal_params[1][3];
