@@ -5,7 +5,7 @@ import re
 import random
 import os
 
-lowerBound = 600
+lowerBound = 500
 upperBound = 1500
 step = 100
 n = int((upperBound - lowerBound) / step)
@@ -13,34 +13,40 @@ massArray = []
 for  i in range(n + 1):
 	massArray.append(lowerBound + i * step)
 
+#file_name = "eeee-uuuuChannelsOnly.root"
 # Use this for no systematics (make sure to put systematics here as final)
-#file_name = "Signal_datacards/datacard_Higgs_Combined.root"
+# file_name = "Signal_datacards/datacard_Higgs_Combined.root"
 # Use this for no systematics testing with only a single channel
 #file_name = "Signal_datacards/datacard_eeee_X_copy.root"
 
 # Use this for systematics testing
 #file_name = "Signal_datacards/datacard_Higgs_Combined_copy.root"
 #file_name = "Signal_datacards/datacard_Higgs_Combined_copy2.root"
+
 file_name = "datacard_Higgs_Combined.root"
 # Use this for systematics testing for only a single channel
-#file_name = "Signal_datacards/datacard_eeee_X_copyForSystematicsTesting.root"
+file_name = "Signal_datacards/datacard_eeee_X_copyForSystematicsTesting.root"
 
 print(os.listdir())
 
 terminal_outputs = []
 counter = 0
+
+# Note: When using AsymptoticLimits, comment out the --tries, -i, and "t" settings
 for mass in massArray:
 	
 	result = subprocess.run(
 	[
+		#"nohup",
 		"combine",
 		file_name,
+		#"-M", "AsymptoticLimits",
 		"-M", "MarkovChainMC",
 		"--freezeParameters", "realHiggsMass,b_ee,b_eu",
 		"--setParameters", f"realHiggsMass={mass},b_ee=1,b_eu=1",
 		"-m", "1000",
-		#"-L", "RooPDF_DSCB_cxx.so",
-		#"-L", "RooPDF_BKG_cxx.so",
+
+
 		 #"--tries", "200",
 		"-i", "20000",
 		"-b", "20",
@@ -53,7 +59,9 @@ for mass in massArray:
 	text = True)
 	
 	terminal_outputs.append(result.stdout)
+	# terminal_outputs.append(result.stderr)
 	print(mass)
+	# print(terminal_outputs)
 
 median_limit_array = []
 band_68_array = []
@@ -73,7 +81,8 @@ for terminal_output in terminal_outputs:
 	band_95_array.append(band_95)
 
 
-with open('realHiggsMass,medianLimit_fromCombineCommands.txt', 'w') as file:
+
+with open('higgsLimits.txt', 'w') as file:
 	file.write("mass".ljust(8) + "median Limit".ljust(16) + "1_Sigma Lower".ljust(16) + "1_Sigma Upper".ljust(16) + "2_Sigma Lower".ljust(16) + "2_Sigma Upper".ljust(16) + "\n")
 	for i in range(n+1):
 		file.write(f"{str(massArray[i]).ljust(7)} {str(median_limit_array[i]).ljust(15)} {str(band_68_array[i][0]).ljust(15)} {str(band_68_array[i][1]).ljust(15)} {str(band_95_array[i][0]).ljust(15)} {str(band_95_array[i][1]).ljust(15)} \n")

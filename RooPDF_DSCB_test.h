@@ -29,6 +29,7 @@ public:
         bool multiplyBy2);
   RooPDF_DSCB_test(const RooPDF_DSCB_test& other, const char* name=0) ;
   RooFormulaVar signal_norm(std::string channel_name);
+  double evaluatePowerLaw(double p0, double p1, double p2) const;
 
 
   virtual TObject* clone(const char* newname) const { return new RooPDF_DSCB_test(*this,newname); }

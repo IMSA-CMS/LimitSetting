@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Combine.cc[687] : (in function: run) - Freezing the following parameters: 
 Combine.cc[689] : (in function: run) - realHiggsMass
 Combine.cc[689] : (in function: run) - b_ee
@@ -33,3 +34,22 @@ Combine.cc[1058] : (in function: run) - shapeBkg_bkg_euuu_X_ch5_ch1__norm = 28.3
 Combine.cc[1058] : (in function: run) - shapeBkg_bkg_euuu_Y_ch5_ch2__norm = 28.3019 (constant)
 Combine.cc[1058] : (in function: run) - shapeBkg_bkg_uuuu_X_ch6_ch1__norm = 73.0609 (constant)
 Combine.cc[1058] : (in function: run) - shapeBkg_bkg_uuuu_Y_ch6_ch2__norm = 73.0609 (constant)
+=======
+Combine.cc[682] : (in function: run) - Freezing the following parameters: 
+Combine.cc[684] : (in function: run) - realHiggsMass
+Combine.cc[684] : (in function: run) - b_ee
+Combine.cc[684] : (in function: run) - b_eu
+Combine.cc[1049] : (in function: run) - Generating toy 1/1, from parameter values ... 
+Combine.cc[1053] : (in function: run) - CMS_channel = 0 
+Combine.cc[1053] : (in function: run) - b_ee = 1 (constant)
+Combine.cc[1053] : (in function: run) - b_eu = 1 (constant)
+Combine.cc[1053] : (in function: run) - mass = 880.883 
+Combine.cc[1053] : (in function: run) - n_exp_binanalysis_1_proc_bkg_eeee_X = 1 (constant)
+Combine.cc[1053] : (in function: run) - normalization_Systematic = 1.8 
+Combine.cc[1053] : (in function: run) - normalization_Systematic_In = 1.8 (constant)
+Combine.cc[1053] : (in function: run) - normalization_systematic = 1 (constant)
+Combine.cc[1053] : (in function: run) - r = 0 
+Combine.cc[1053] : (in function: run) - realHiggsMass = 1500 (constant)
+Combine.cc[1053] : (in function: run) - shapeBkg_bkg_eeee_X_analysis_1__norm = 212.057 (constant)
+Combine.cc[1053] : (in function: run) - shape_systematic = 0 (constant)
+>>>>>>> a10e4e71bc46e3f8da6c2d286745dbdecb4fe7c3
