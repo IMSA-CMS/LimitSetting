@@ -89,15 +89,6 @@ std::vector<std::vector<double>> Channel::extractParameters()
 	}
 	std::sort(functionNames.begin(), functionNames.end());
 
-	//See order of names
-	std::cout << "\n \n \n" << "Names of parameters: " << "\n"; 
-	for (auto functionName: functionNames)
-	{
-		std::cout << functionName << "\n";
-
-	}
-	std::cout << "\n \n \n";
-
 	// Goes through each function (in alphabetical order) and extracts their parameters 
 	for (auto functionName : functionNames)
 	{
@@ -334,7 +325,11 @@ void construct_models_Higgs_5()
 	auto hist_X = file.Get<TTree>("Signal");
 	// auto hist_Y = file.Get<TTree>("Signal");      <------ When We Get both data sets, uncomment this and fix mc_Y below
 
+<<<<<<< HEAD
+	RooRealVar mass("mass", "mass", 900, 50, 2000); // This is the invariant mass (energy) of the event and is the independent variable for the background and Signal PDFs
+=======
 	RooRealVar mass("mass", "mass", 900, 400, 2000); // This is the invariant mass (energy) of the event and is the independent variable for the background and Signal PDFs
+>>>>>>> 26faa2700ab3e558e75938fa85e04194e47df49f
 
 	// This converts the TTree to a RooDataSet correlated to / dependent on the mass RooRealVar.
 	RooDataSet mc_X("Events900_X","Events900", hist_X, RooArgSet(mass), "");

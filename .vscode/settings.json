@@ -1,0 +1,6 @@
+{
+	"files.associations": {
+		"*.java": "java",
+		"construct_models_Higgs.C": "cpp"
+	}
+}

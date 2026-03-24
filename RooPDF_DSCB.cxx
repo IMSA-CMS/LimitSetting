@@ -33,6 +33,7 @@ ClassImp(RooPDF_DSCB);
    signal_params(_signal_params),
    multiplyBy2(_multiplyBy2)
  { 
+	//std:: cout << "Main constructor signal params size: " << signal_params.size() << '\n';
  } 
 
 
@@ -45,6 +46,8 @@ ClassImp(RooPDF_DSCB);
    signal_params(other.signal_params),
    multiplyBy2(other.multiplyBy2)
  { 
+		//std:: cout << "Copy constructor signal params size: " << signal_params.size() << '\n';
+
  }
 
  RooFormulaVar RooPDF_DSCB::signal_norm(std::string channel_name)
@@ -57,6 +60,7 @@ ClassImp(RooPDF_DSCB);
 // In the future, it would be nice if each of these calculated parameters was its own Roo Object that we pass in to handle systematics
  Double_t RooPDF_DSCB::evaluate() const 
  { 
+	//std::cout << "Signal params size: " << signal_params.size() << '\n';
 	double alpha_l = signal_params[0][0] * std::pow((realHiggsMass - signal_params[0][1]), signal_params[0][2]) + signal_params[0][3];
 	double alpha_h = signal_params[1][0] * std::pow((realHiggsMass - signal_params[1][1]), signal_params[1][2]) + signal_params[1][3];
 	double n_l = signal_params[2][0] * std::pow((realHiggsMass - signal_params[2][1]), signal_params[2][2]) + signal_params[2][3];
