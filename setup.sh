@@ -4,6 +4,23 @@ set -e #stop on error
 cp RooPDF_HiggsAnalysis_*.h ../interface/
 cp RooPDF_HiggsAnalysis_*.cxx ../src/
 
+link_analysis_file() {
+  local source_file="$1"
+  local destination_file="$2"
+
+  if [[ ! -e "${source_file}" ]]; then
+    echo "Missing source file for symlink: ${source_file}" >&2
+    exit 1
+  fi
+
+  ln -sfn "${source_file}" "${destination_file}"
+}
+
+link_analysis_file "../../../../../CMSSW_15_0_4/src/CMSAnalysis/Analysis/src/FitFunction.cc" "../src/FitFunction.cc"
+link_analysis_file "../../../../../CMSSW_15_0_4/src/CMSAnalysis/Analysis/src/FitFunctionCollection.cc" "../src/FitFunctionCollection.cc"
+link_analysis_file "../../../../../CMSSW_15_0_4/src/CMSAnalysis/Analysis/interface/FitFunction.hh" "../interface/FitFunction.hh"
+link_analysis_file "../../../../../CMSSW_15_0_4/src/CMSAnalysis/Analysis/interface/FitFunctionCollection.hh" "../interface/FitFunctionCollection.hh"
+
 for header in RooPDF_HiggsAnalysis_*.h; do
   header_name="$(basename "${header}")"
   class_name="$(grep -m 1 -E '^[[:space:]]*class[[:space:]]+RooPDF_HiggsAnalysis_' "${header}" | awk '{print $2}' | sed 's/[:{].*//')"
@@ -19,4 +36,3 @@ if [[ "${1:-}" != "--nobuild" ]]; then
   scram b -j
   cd ./LimitSetting
 fi
-
