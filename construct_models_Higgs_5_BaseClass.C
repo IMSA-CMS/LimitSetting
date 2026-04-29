@@ -32,11 +32,10 @@
 #include "RooPDF_HiggsAnalysis_Base.h"
 #include "RooPDF_HiggsAnalysis_DSCB.h"
 #include "RooPDF_HiggsAnalysis_BKG.h"
-#include "RooPDF_HiggsAnalysis_BKG.h"
 #include "RooArgList.h"
 #include "RooGenericPdf.h"
-#include "CMSAnalysis/Analysis/interface/FitFunction.hh"
-#include "CMSAnalysis/Analysis/interface/FitFunctionCollection.hh"
+#include "FitFunction.hh"
+#include "FitFunctionCollection.hh"
 
 
 
