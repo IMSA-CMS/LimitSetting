@@ -6,7 +6,7 @@
 
 // Your description goes here...
 
-#include "RooPDF_HiggsAnalysis_DBLGAUSS.h"
+#include "../interface/RooPDF_HiggsAnalysis_DBLGAUSS.h"
 
 #include <RooAbsReal.h>
 #include <RooAbsCategory.h>
@@ -27,13 +27,7 @@ RooPDF_HiggsAnalysis_DBLGAUSS::RooPDF_HiggsAnalysis_DBLGAUSS(const char *name, c
                         RooAbsReal& _shape_Systematic, 
                         const std::vector<std::vector<double>>& _signal_params,
                         bool _multiplyBy2)
-   : RooPDF_HiggsAnalysis_Base(name,title),
-   x("x","x",this,_x),
-   realHiggsMass("realHiggsMass","realHiggsMass",this,_realHiggsMass),
-   branch_ratio_1("branch_ratio_1","branch_ratio_1",this,_branch_ratio_1),
-   branch_ratio_2("branch_ratio_2","branch_ratio_2",this,_branch_ratio_2),
-   norm_Systematic("norm_Systematic","norm_Systematic",this,_norm_Systematic),
-   shape_Systematic("shape_Systematic","shape_Systematic",this,_shape_Systematic),
+   : RooPDF_HiggsAnalysis_Base(name, title, _x, _realHiggsMass, _branch_ratio_1, _branch_ratio_2, _norm_Systematic, _shape_Systematic),
    signal_params(_signal_params),
    multiplyBy2(_multiplyBy2)
 {
@@ -53,12 +47,6 @@ RooPDF_HiggsAnalysis_DBLGAUSS::RooPDF_HiggsAnalysis_DBLGAUSS(RooPDF_HiggsAnalysi
 }
 
 
-RooFormulaVar RooPDF_DBLGAUSS::signal_norm(std::string channel_name)
-{
-   std::string norm_string = std::to_string(signal_params[6][0]) +  "* (@0 - " + std::to_string(signal_params[6][1]) + ")^" + std::to_string(signal_params[6][2]) + " + " + std::to_string(signal_params[6][3]);
-	RooFormulaVar norm((channel_name + "_norm").c_str(), (channel_name + "_norm").c_str(), norm_string.c_str(), RooArgList(*realHiggsMass.absArg()));
-	return norm;
-}
 
 double RooPDF_HiggsAnalysis_DBLGAUSS::evaluate() const 
 {
@@ -111,43 +99,50 @@ double RooPDF_HiggsAnalysis_DBLGAUSS::evaluate() const
 	}
 }
 
-void RooPDF_HiggsAnalysis_DBLGAUSS::printParameters()
-{
-   double alpha_l = signal_params[0][0] * std::pow((realHiggsMass - signal_params[0][1]), signal_params[0][2]) + signal_params[0][3];
-	double alpha_h = signal_params[1][0] * std::pow((realHiggsMass - signal_params[1][1]), signal_params[1][2]) + signal_params[1][3];
-	double n_l = signal_params[2][0] * std::pow((realHiggsMass - signal_params[2][1]), signal_params[2][2]) + signal_params[2][3];
-	double n_h = signal_params[3][0] * std::pow((realHiggsMass - signal_params[3][1]), signal_params[3][2]) + signal_params[3][3];
-	double mean = signal_params[4][0] * std::pow((realHiggsMass - signal_params[4][1]), signal_params[4][2]) + signal_params[4][3];
-	double sigma = signal_params[5][0] * std::pow((realHiggsMass - signal_params[5][1]), signal_params[5][2]) + signal_params[5][3];
-	double norm = signal_params[6][0] * std::pow((realHiggsMass - signal_params[6][1]), signal_params[6][2]) + signal_params[6][3];
-	double t = (x - mean) / sigma; 
+// void RooPDF_HiggsAnalysis_DBLGAUSS::printParameters()
+// {
+//    double alpha_l = signal_params[0][0] * std::pow((realHiggsMass - signal_params[0][1]), signal_params[0][2]) + signal_params[0][3];
+// 	double alpha_h = signal_params[1][0] * std::pow((realHiggsMass - signal_params[1][1]), signal_params[1][2]) + signal_params[1][3];
+// 	double n_l = signal_params[2][0] * std::pow((realHiggsMass - signal_params[2][1]), signal_params[2][2]) + signal_params[2][3];
+// 	double n_h = signal_params[3][0] * std::pow((realHiggsMass - signal_params[3][1]), signal_params[3][2]) + signal_params[3][3];
+// 	double mean = signal_params[4][0] * std::pow((realHiggsMass - signal_params[4][1]), signal_params[4][2]) + signal_params[4][3];
+// 	double sigma = signal_params[5][0] * std::pow((realHiggsMass - signal_params[5][1]), signal_params[5][2]) + signal_params[5][3];
+// 	double norm = signal_params[6][0] * std::pow((realHiggsMass - signal_params[6][1]), signal_params[6][2]) + signal_params[6][3];
+// 	double t = (x - mean) / sigma; 
 
 
-	double result;
-	double fact1TLessMinosAlphaL = alpha_l/n_l;
-	double fact2TLessMinosAlphaL = (n_l/alpha_l) - alpha_l -t;
-	double fact1THhigerAlphaH = alpha_h/n_h;
-	double fact2THigherAlphaH = (n_h/alpha_h) - alpha_h +t;
+// 	double result;
+// 	double fact1TLessMinosAlphaL = alpha_l/n_l;
+// 	double fact2TLessMinosAlphaL = (n_l/alpha_l) - alpha_l -t;
+// 	double fact1THhigerAlphaH = alpha_h/n_h;
+// 	double fact2THigherAlphaH = (n_h/alpha_h) - alpha_h +t;
 
-	double root2 = std::pow(2,0.5);
-	if (-alpha_l <= t && alpha_h >= t)
-	{
-		result = exp(-0.5*t*t);
-	}
-	else if (t < -alpha_l)
-	{
-		result = exp(-0.5*alpha_l*alpha_l)*pow(fact1TLessMinosAlphaL*fact2TLessMinosAlphaL, -n_l);
-	}
-	else
-	{
-		result = exp(-0.5*alpha_h*alpha_h)*pow(fact1THhigerAlphaH*fact2THigherAlphaH, -n_h);
-	}
+// 	double root2 = std::pow(2,0.5);
+// 	if (-alpha_l <= t && alpha_h >= t)
+// 	{
+// 		result = exp(-0.5*t*t);
+// 	}
+// 	else if (t < -alpha_l)
+// 	{
+// 		result = exp(-0.5*alpha_l*alpha_l)*pow(fact1TLessMinosAlphaL*fact2TLessMinosAlphaL, -n_l);
+// 	}
+// 	else
+// 	{
+// 		result = exp(-0.5*alpha_h*alpha_h)*pow(fact1THhigerAlphaH*fact2THigherAlphaH, -n_h);
+// 	}
 
-	double lowTailNorm = (n_l/std::abs(alpha_l)) * 1/(n_l - 1) * std::exp(-0.5 * alpha_l * alpha_l);
-	double highTailNorm = (n_h/std::abs(alpha_h)) * 1/(n_h - 1) * std::exp(-0.5 * alpha_h * alpha_h);
-	double gaussianNormA = erf(std::abs(alpha_l/root2)) + erf(std::abs(alpha_h/root2));  
-	double gaussianNormB = std::pow(M_PI/2, 0.5) * gaussianNormA;
-	double functionNormalization = std::pow(sigma * (gaussianNormB + lowTailNorm + highTailNorm ), -1);
+// 	double lowTailNorm = (n_l/std::abs(alpha_l)) * 1/(n_l - 1) * std::exp(-0.5 * alpha_l * alpha_l);
+// 	double highTailNorm = (n_h/std::abs(alpha_h)) * 1/(n_h - 1) * std::exp(-0.5 * alpha_h * alpha_h);
+// 	double gaussianNormA = erf(std::abs(alpha_l/root2)) + erf(std::abs(alpha_h/root2));  
+// 	double gaussianNormB = std::pow(M_PI/2, 0.5) * gaussianNormA;
+// 	double functionNormalization = std::pow(sigma * (gaussianNormB + lowTailNorm + highTailNorm ), -1);
 
-	std::cout<< "FuncNorm: " << functionNormalization << "; norm: " << norm << "; result: " << result << std::endl;
-}
+// 	std::cout<< "FuncNorm: " << functionNormalization << "; norm: " << norm << "; result: " << result << std::endl;
+// }
+
+  RooFormulaVar RooPDF_HiggsAnalysis_DBLGAUSS::signal_norm(std::string channel_name)
+  {
+   std::string norm_string = std::to_string(signal_params[6][0]) +  "* (@0 - " + std::to_string(signal_params[6][1]) + ")^" + std::to_string(signal_params[6][2]) + " + " + std::to_string(signal_params[6][3]);
+	RooFormulaVar norm((channel_name + "_norm").c_str(), (channel_name + "_norm").c_str(), norm_string.c_str(), RooArgList(*realHiggsMass.absArg()));
+	return norm;
+  }

@@ -1,5 +1,9 @@
+#!/usr/bin/env python3
+
 import subprocess
 import re
+import random
+import os
 
 lowerBound = 500
 upperBound = 1500
@@ -18,9 +22,12 @@ for  i in range(n + 1):
 # Use this for systematics testing
 #file_name = "Signal_datacards/datacard_Higgs_Combined_copy.root"
 #file_name = "Signal_datacards/datacard_Higgs_Combined_copy2.root"
-#file_name = "Signal_datacards/datacard_Higgs_Combined.root"
+
+file_name = "datacard_Higgs_Combined.root"
 # Use this for systematics testing for only a single channel
 file_name = "Signal_datacards/datacard_eeee_X_copyForSystematicsTesting.root"
+
+print(os.listdir())
 
 terminal_outputs = []
 counter = 0
@@ -38,13 +45,13 @@ for mass in massArray:
 		"--freezeParameters", "realHiggsMass,b_ee,b_eu",
 		"--setParameters", f"realHiggsMass={mass},b_ee=1,b_eu=1",
 		"-m", "1000",
-		"-L", "RooPDF_HiggsAnalysis_DSCB_cxx.so",
-		"-L", "RooPDF_HiggsAnalysis_Base_cxx.so",
-		"-L", "RooPDF_HiggsAnalysis_BKG_cxx.so",
+
+
 		 #"--tries", "200",
 		"-i", "20000",
 		"-b", "20",
 		"-t", "1",
+		"-s", str(random.randint(1,999999)),
 		"--toysNoSystematics",
 		"-v", "3"
 	],

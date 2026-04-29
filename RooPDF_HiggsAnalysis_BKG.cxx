@@ -6,7 +6,7 @@
 
 // Your description goes here...
 
-#include "RooPDF_HiggsAnalysis_BKG.h"
+#include "../interface/RooPDF_HiggsAnalysis_BKG.h"
 
 #include <RooAbsReal.h>
 #include <RooAbsCategory.h>
