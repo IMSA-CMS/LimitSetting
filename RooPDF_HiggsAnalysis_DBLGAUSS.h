@@ -7,11 +7,11 @@
 #ifndef RooPDF_HiggsAnalysis_DBLGAUSS_h
 #define RooPDF_HiggsAnalysis_DBLGAUSS_h
 
-#include <RooPDF_HiggsAnalysis_Base.h>
-#include <RooRealProxy.h>
-#include <RooCategoryProxy.h>
-#include <RooAbsReal.h>
-#include <RooAbsCategory.h>
+#include "RooPDF_HiggsAnalysis_Base.h"
+#include "RooRealProxy.h"
+#include "RooCategoryProxy.h"
+#include "RooAbsReal.h"
+#include "RooAbsCategory.h"
 
 #include <complex>
 
@@ -28,6 +28,7 @@ public:
         bool multiplyBy2);
   RooPDF_HiggsAnalysis_DBLGAUSS(RooPDF_HiggsAnalysis_DBLGAUSS const &other, const char *name=nullptr);
   TObject* clone(const char *newname) const override { return new RooPDF_HiggsAnalysis_DBLGAUSS(*this, newname); }
+  virtual RooFormulaVar signal_norm(std::string channel_name) override;
 protected:
 
   RooRealProxy x ;

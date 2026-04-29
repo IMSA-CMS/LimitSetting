@@ -9,14 +9,14 @@
 #define RooPDF_HiggsAnalysis_DSCB_h
 
 
-#include <RooAbsPdf.h>
-#include <RooRealProxy.h>
-#include <RooCategoryProxy.h>
-#include <RooAbsReal.h>
-#include <RooAbsCategory.h>
+#include "RooAbsPdf.h"
+#include "RooRealProxy.h"
+#include "RooCategoryProxy.h"
+#include "RooAbsReal.h"
+#include "RooAbsCategory.h"
 #include "RooPDF_HiggsAnalysis_Base.h"
 #include <complex>
-#include <RooFormulaVar.h>
+#include "RooFormulaVar.h"
 
 
 class RooPDF_HiggsAnalysis_DSCB : public RooPDF_HiggsAnalysis_Base {
