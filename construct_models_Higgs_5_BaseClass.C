@@ -486,10 +486,10 @@ void construct_models_Higgs_5_BaseClass()
 
 	// Get signal and background parameters from files - Note: Update file paths later
 	// /uscms/home/bhobbs/Analysis/CMSSW_15_0_4/src/CMSAnalysis/Analysis/bin/fitting/H++SignalParameterFunctions
-	// /uscms/home/jdavis1/analysis/CMSSW_15_0_10/src/CMSAnalysis/Analysis/bin/fitting/H++SignalParameterFunctions.txt
-	std::string signalParamsFileName = "/uscms/home/kprasad/cmsReleaseArea/CMSSW_15_0_4/src/CMSAnalysis/Analysis/bin/fitting/H++SignalParameterFunctions.txt";
+	std::string signalParamsFileName = "/uscms/home/jdavis1/analysis/CMSSW_15_0_10/src/CMSAnalysis/Analysis/bin/fitting/H++SignalParameterFunctions.txt";
+	//std::string signalParamsFileName = "/home/chenh/lpc/analysis/CMSSW_15_0_4/src/CMSAnalysis/Analysis/bin/fitting/H++SignalParameterFunctions.txt";
 	//std::string signalParamsFileName = "H++SignalParameterFunctions.txt";
-	std::string backgroundParamsFileName = "/uscms/home/kprasad/cmsReleaseArea/CMSSW_15_0_4/src/CMSAnalysis/Analysis/bin/fitting/H++BackgroundFunctions.txt";
+	std::string backgroundParamsFileName = "/home/chenh/lpc/analysis/CMSSW_15_0_4/src/CMSAnalysis/Analysis/bin/fitting/H++BackgroundFunctions70.txt";
 	std::map<std::string, std::vector<FitFunction>> signalParameters = getFunctionsSortedByChannel(signalParamsFileName);
 	std::map<std::string, std::vector<FitFunction>> backgroundParameters = getFunctionsSortedByChannel(backgroundParamsFileName);  
 
