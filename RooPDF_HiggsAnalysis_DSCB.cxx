@@ -8,7 +8,7 @@
 // Your description goes here...
 
 
-#include "RooPDF_HiggsAnalysis_DSCB.h"
+#include "../interface/RooPDF_HiggsAnalysis_DSCB.h"
 
 
 #include <RooAbsReal.h>
