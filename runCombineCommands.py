@@ -25,7 +25,7 @@ for  i in range(n + 1):
 
 file_name = "datacard_Higgs_Combined.root"
 # Use this for systematics testing for only a single channel
-file_name = "Signal_datacards/datacard_eeee_X_copyForSystematicsTesting.root"
+#file_name = "Signal_datacards/datacard_eeee_X_copyForSystematicsTesting.root"
 
 print(os.listdir())
 
@@ -48,12 +48,14 @@ for mass in massArray:
 
 
 		 #"--tries", "200",
+		 "-n", f"HiggsCombine{mass}",
 		"-i", "20000",
 		"-b", "20",
-		"-t", "1",
+		"-t", "2",
 		"-s", str(random.randint(1,999999)),
 		"--toysNoSystematics",
-		"-v", "3"
+		#"-v", "3",
+		"--saveToys"
 	],
 	capture_output = True,
 	text = True)
@@ -87,4 +89,10 @@ with open('higgsLimits.txt', 'w') as file:
 	for i in range(n+1):
 		file.write(f"{str(massArray[i]).ljust(7)} {str(median_limit_array[i]).ljust(15)} {str(band_68_array[i][0]).ljust(15)} {str(band_68_array[i][1]).ljust(15)} {str(band_95_array[i][0]).ljust(15)} {str(band_95_array[i][1]).ljust(15)} \n")
 	
+#print(result)
+
+with open('result.txt', 'w') as file:
+	for terminal_output in terminal_outputs:
+		#file.write("Writing new mass point")
+		file.write(str(terminal_output))
 

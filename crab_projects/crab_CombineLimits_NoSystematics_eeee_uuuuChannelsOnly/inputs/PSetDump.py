@@ -3,10 +3,11 @@ import FWCore.ParameterSet.Config as cms
 process = cms.Process("NoSplit")
 
 process.source = cms.Source("EmptySource",
-    fileNames = cms.untracked.vstring('')
+    firstRun = cms.untracked.uint32(1),
+    numberEventsInRun = cms.untracked.uint32(1)
 )
 process.maxEvents = cms.untracked.PSet(
-    input = cms.untracked.int32(-1),
+    input = cms.untracked.int32(1),
     output = cms.optional.untracked.allowed(cms.int32,cms.PSet)
 )
 
@@ -43,7 +44,7 @@ process.options = cms.untracked.PSet(
     printDependencies = cms.untracked.bool(False),
     sizeOfStackForThreadsInKB = cms.optional.untracked.uint32,
     throwIfIllegalParameter = cms.untracked.bool(True),
-    wantSummary = cms.untracked.bool(True)
+    wantSummary = cms.untracked.bool(False)
 )
 
 process.MessageLogger = cms.Service("MessageLogger",
