@@ -111,7 +111,7 @@ def makeLimitPlot(output,exp,printStats=False,ratioLabel=""):#chan, -4th karedit
 	
 	
 	
-	file = open("realHiggsMass,medianLimit_fromCombineCommands.txt")
+	file = open("higgsLimits.txt")
 	allMasses = []
 	median_limits =[]
 	_1Sigma_lower = []

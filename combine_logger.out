@@ -6,6 +6,7 @@ Combine.cc[1049] : (in function: run) - Generating toy 1/1, from parameter value
 Combine.cc[1053] : (in function: run) - CMS_channel = 0 
 Combine.cc[1053] : (in function: run) - b_ee = 1 (constant)
 Combine.cc[1053] : (in function: run) - b_eu = 1 (constant)
+Combine.cc[1053] : (in function: run) - eeee_X_frac_0 = 0.5 
 Combine.cc[1053] : (in function: run) - mass = 880.883 
 Combine.cc[1053] : (in function: run) - n_exp_binanalysis_1_proc_bkg_eeee_X = 1 (constant)
 Combine.cc[1053] : (in function: run) - normalization_Systematic = 1.8 

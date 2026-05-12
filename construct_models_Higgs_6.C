@@ -55,6 +55,7 @@ TGraph makeGraph(double numCoords, std::vector<double>& xCoords, std::vector<dou
 RooPDF_BKG create_bkg_pdf(std::string channel_name, std::vector<std::string> parameterSet, RooRealVar& mass);
 RooPDF_DSCB_test create_signal_pdf(std::string channel_name, std::vector<std::string> parameterSet, RooRealVar& mass, RooRealVar& realHiggsMass, RooRealVar& branch_1, RooRealVar& branch_2, RooRealVar& norm_Systematic, RooRealVar& shape_Systematic);
 RooFormulaVar get_signal_norm(std::string channel_name, std::vector<std::string> parameterSet, RooRealVar& realHiggsMass);
+RooFormulaVar get_signal_norm(std::string channel_name, RooRealVar& realHiggsMass);
 std::map<std::string, std::vector<double>> getParameterValuesFromMap(std::string fileName, std::vector<string>* channelNames);
 bool containsSubstring(std::string mainString, std::string subString);
 
@@ -304,7 +305,7 @@ RooFormulaVar get_signal_norm(std::string channel_name, std::vector<std::string>
 {
 	std::vector<std::vector<double>> parameters = getParameters(parameterSet);
 
-	//std::cout << "get_signal_norm: " << channel_name << '\n';
+	//std::cout << "get_signal_norm: " << channel_name< '\n';
 	// for (std::vector<double> parameterLine : parameters)
 	// {
 	// 	for (double parameterValue : parameterLine)
@@ -319,6 +320,17 @@ RooFormulaVar get_signal_norm(std::string channel_name, std::vector<std::string>
 	// (The naming stuff is for consistency, I don't think it matters since I am copying the object out of the function anyway)
 	RooFormulaVar norm((channel_name + "_signal_norm").c_str(), (channel_name + "_signal_norm").c_str(), norm_string.c_str(), RooArgList(realHiggsMass)); 
 	return norm;
+}
+
+// Creates the Signal Normalization Object for a channel - The Normalization object must vary with mass when it is added to workspace, which is why it is a FormulaVar and not just be the integral over the signal pdf object
+RooFormulaVar get_signal_norm(std::string channel_name, RooRealVar& realHiggsMass)
+{
+    std::vector<std::vector<double>> parameters = getParameters("Parameter_Values/Signal_Parameters/signal_parameters_" + channel_name + ".txt");
+    std::string norm_string = std::to_string(parameters[6][0]) +  "* (@0 - " + std::to_string(parameters[6][1]) + ")^" + std::to_string(parameters[6][2]) + " + " + std::to_string(parameters[6][3]);
+   
+    // (The naming stuff is for consistency, I don't think it matters since I am copying the object out of the function anyway)
+    RooFormulaVar norm((channel_name + "_signal_norm").c_str(), (channel_name + "_signal_norm").c_str(), norm_string.c_str(), RooArgList(realHiggsMass));
+    return norm;
 }
 
 // Creates a RooPDF_BKG Object 
