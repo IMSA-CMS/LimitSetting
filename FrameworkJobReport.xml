@@ -1,0 +1,15 @@
+<FrameworkJobReport>
+<FrameworkError ExitStatus="8009" Type="Fatal Exception" >
+<![CDATA[
+An exception of category 'Configuration' occurred while
+   [0] Constructing the EventProcessor
+   [1] Validating configuration of input source of type EmptySource
+Exception Message:
+Illegal parameter found in configuration.  The parameter is named:
+ 'fileNames'
+You could be trying to use a parameter name that is not
+allowed for this plugin or it could be misspelled.
+
+]]>
+</FrameworkError>
+</FrameworkJobReport>

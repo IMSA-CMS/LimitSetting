@@ -62,7 +62,7 @@ RooPDF_DSCB_test create_signal_pdf(std::string channel_name, std::vector<std::st
 RooFormulaVar get_signal_norm(std::string channel_name, std::vector<std::string> parameterSet, RooRealVar& realHiggsMass);
 std::map<std::string, std::vector<double>> getParameterValuesFromMap(std::string fileName, std::vector<string>* channelNames);
 bool containsSubstring(std::string mainString, std::string subString);
-
+std::map<std::string, std::vector<FitFunction>> getNominals(std::map<std::string, std::vector<FitFunction>* originalSignal);
 
 
 
@@ -76,6 +76,8 @@ Channel::Channel(std::string channelName, std::vector<FitFunction> channelFuncti
 		fitFunctions[functionName] = channelFunction;
 	}
 }
+
+s
 
 std::vector<std::vector<double>> Channel::extractParameters()
 {
@@ -199,6 +201,24 @@ std::string replaceAll(std::string unmodifiedString, const std::string from, con
 
 }
 
+std::map<std::string, std::vector<FitFunction> getNominals(std::map<std::string, std::vector<FitFunction>* originalSignal)
+{
+	std::map<std::string, std::vector<FitFunction> nominalsOnly = [];
+	for (auto* [channel, fitFunctions] : *originalSignal)
+	{
+		std::vector<FitFunction> onlyNominalFunctions = [];
+		for (auto* fitFunction : fitFunctions)
+		{
+			std::string parameterName = fitFunction.getParameterName(); 
+			if (containsSubstring(parameterName, "Nominal"))
+			{
+				onlyNominalFunctions.push_back(*fitFunction);
+			}
+		}
+		nominalsOnly[channel] = onlyNominalFunctions;
+	}
+	return nominalsOnly;
+}
 
 // Helper function for splitting strings
 // std::vector<std::string> split(const std::string& str, char delimiter) {
@@ -325,11 +345,8 @@ void construct_models_Higgs_5()
 	auto hist_X = file.Get<TTree>("Signal");
 	// auto hist_Y = file.Get<TTree>("Signal");      <------ When We Get both data sets, uncomment this and fix mc_Y below
 
-<<<<<<< HEAD
 	RooRealVar mass("mass", "mass", 900, 50, 2000); // This is the invariant mass (energy) of the event and is the independent variable for the background and Signal PDFs
-=======
-	RooRealVar mass("mass", "mass", 900, 400, 2000); // This is the invariant mass (energy) of the event and is the independent variable for the background and Signal PDFs
->>>>>>> 26faa2700ab3e558e75938fa85e04194e47df49f
+	//RooRealVar mass("mass", "mass", 900, 400, 2000); // This is the invariant mass (energy) of the event and is the independent variable for the background and Signal PDFs
 
 	// This converts the TTree to a RooDataSet correlated to / dependent on the mass RooRealVar.
 	RooDataSet mc_X("Events900_X","Events900", hist_X, RooArgSet(mass), "");
@@ -382,9 +399,9 @@ void construct_models_Higgs_5()
 	std::string signalParamsFileName = "/uscms/home/bhobbs/Analysis/CMSSW_15_0_4/src/CMSAnalysis/Analysis/bin/fitting/H++SignalParameterFunctions.txt";
 	//std::string signalParamsFileName = "H++SignalParameterFunctions.txt";
 	std::string backgroundParamsFileName = "/uscms/home/bhobbs/Analysis/CMSSW_15_0_4/src/CMSAnalysis/Analysis/bin/fitting/OtherBackgroundFunctions.txt";
-	std::map<std::string, std::vector<FitFunction>> signalParameters = FitFunctionCollection::getFunctionsSortedByChannel(signalParamsFileName);
+	std::map<std::string, std::vector<FitFunction>> allSignalParameters = FitFunctionCollection::getFunctionsSortedByChannel(signalParamsFileName);
 	std::map<std::string, std::vector<FitFunction>> backgroundParameters = FitFunctionCollection::getFunctionsSortedByChannel(backgroundParamsFileName);  
-
+	std::map<std::string, std::vector<FitFunction>> signalParameters = getNominals(allSignalParameters);
 
 	std::vector<Channel> signalChannels = {};
 	std::vector<Channel> backgroundChannels = {};
