@@ -7,12 +7,12 @@
 #ifndef RooPDF_HiggsAnalysis_BKG_h
 #define RooPDF_HiggsAnalysis_BKG_h
 
-#include <RooPDF_HiggsAnalysis_Base.h>
-#include <RooRealProxy.h>
-#include <RooCategoryProxy.h>
-#include <RooAbsReal.h>
-#include <RooAbsCategory.h>
-#include <RooGenericPdf.h>
+#include "RooPDF_HiggsAnalysis_Base.h"
+#include "RooRealProxy.h"
+#include "RooCategoryProxy.h"
+#include "RooAbsReal.h"
+#include "RooAbsCategory.h"
+#include "RooGenericPdf.h"
 
 #include <complex>
 
