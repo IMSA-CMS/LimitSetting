@@ -43,7 +43,7 @@ RooPDF_DBLGAUSS::RooPDF_DBLGAUSS(RooPDF_DBLGAUSS const &other, const char *name)
    branch_ratio_2("branch_ratio_2",this,other.branch_ratio_2),
    signal_params(other.signal_params),
    multiplyBy2(other.multiplyBy2)
-{c
+{
 }
 
 RooFormulaVar RooPDF_DBLGAUSS::signal_norm(std::string channel_name)
@@ -56,7 +56,7 @@ RooFormulaVar RooPDF_DBLGAUSS::signal_norm(std::string channel_name)
 
 double RooPDF_DBLGAUSS::evaluate() const 
 {
-   double alpha_l = signal_params[0][0] * std::pow((realHiggsMass - signal_params[0][1]), signal_params[0][2]) + signal_params[0][3];
+    double alpha_l = signal_params[0][0] * std::pow((realHiggsMass - signal_params[0][1]), signal_params[0][2]) + signal_params[0][3];
 	double alpha_h = signal_params[1][0] * std::pow((realHiggsMass - signal_params[1][1]), signal_params[1][2]) + signal_params[1][3];
 	double n_l = signal_params[2][0] * std::pow((realHiggsMass - signal_params[2][1]), signal_params[2][2]) + signal_params[2][3];
 	double n_h = signal_params[3][0] * std::pow((realHiggsMass - signal_params[3][1]), signal_params[3][2]) + signal_params[3][3];

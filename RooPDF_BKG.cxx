@@ -17,10 +17,10 @@
 #include <RooGenericPdf.h>
 
 // Indices in bkg_params for each type of background
-const int I_TTBAR = 1;
-const int I_ZZ = 2;
-const int I_DY = 0;
-const int I_TTZ = 3;
+static const int I_TTBAR = 1;
+static const int I_ZZ = 2;
+static const int I_DY = 0;
+static const int I_TTZ = 3;
 
 
 
