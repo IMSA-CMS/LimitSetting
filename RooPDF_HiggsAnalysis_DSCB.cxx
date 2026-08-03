@@ -11,8 +11,8 @@
 #include "../interface/RooPDF_HiggsAnalysis_DSCB.h"
 
 
-#include <RooAbsReal.h>
-#include <RooAbsCategory.h>
+#include "RooAbsReal.h"
+#include "RooAbsCategory.h"
 
 
 #include <Riostream.h>
@@ -49,7 +49,7 @@ RooPDF_HiggsAnalysis_DSCB::RooPDF_HiggsAnalysis_DSCB(RooPDF_HiggsAnalysis_DSCB c
 
 RooFormulaVar RooPDF_HiggsAnalysis_DSCB::signal_norm(std::string channel_name)
  {
-    std::string norm_string = "@1 * " + std::to_string(signal_params[6][0]) +  "* (@0 - " + std::to_string(signal_params[6][1]) + ")^" + std::to_string(signal_params[6][2]) + " + " + std::to_string(signal_params[6][3]);
+    std::string norm_string = "@1 * " + std::to_string(signal_params[6][0]) +  "* (@0 - " + std::to_string(signal_params[6][1]) + ")^" + std::to_string(signal_params[6][2]);
     RooFormulaVar norm((channel_name + "_norm").c_str(), (channel_name + "_norm").c_str(), norm_string.c_str(), RooArgList(*realHiggsMass.absArg(), *norm_Systematic.absArg()));
     return norm;
  }

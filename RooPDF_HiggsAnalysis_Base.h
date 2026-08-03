@@ -8,7 +8,7 @@
 #ifndef RooPDF_HiggsAnalysis_Base_h
 #define RooPDF_HiggsAnalysis_Base_h
 
-
+#include "FitFunction.hh"
 #include "RooAbsPdf.h"
 #include "RooRealProxy.h"
 #include "RooCategoryProxy.h"
@@ -24,17 +24,18 @@ class RooPDF_HiggsAnalysis_Base : public RooAbsPdf
 {
 public:
    RooPDF_HiggsAnalysis_Base() {}
-   RooPDF_HiggsAnalysis_Base(const char *name, const char *title,        RooAbsReal& _x,
+   RooPDF_HiggsAnalysis_Base(const char *name, const char *title, RooAbsReal& _x,
         RooAbsReal& _realHiggsMass,
         RooAbsReal& _branch_ratio_1,
         RooAbsReal& _branch_ratio_2,
         RooAbsReal& _norm_Systematic,
-        RooAbsReal& _shape_Systematic);
+        RooAbsReal& _shape_Systematic,
+        FitFunction fitFunction);
   RooPDF_HiggsAnalysis_Base(RooPDF_HiggsAnalysis_Base const &other, const char *name=nullptr);
 
 
   double evaluate() const override;
-  virtual RooFormulaVar signal_norm(std::string channel_name) = 0;
+  RooFormulaVar signal_norm(std::string channel_name);
 protected:
 
 
@@ -44,7 +45,7 @@ protected:
   RooRealProxy branch_ratio_2 ;
   RooRealProxy norm_Systematic ;
   RooRealProxy shape_Systematic ;
-
+  FitFunction fitFunction;
 
  
 private:
