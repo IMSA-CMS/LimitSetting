@@ -10,15 +10,20 @@
 
 #include "../interface/RooPDF_HiggsAnalysis_Base.h"
 
+
 #include <RooAbsReal.h>
 #include <RooAbsCategory.h>
+
 
 #include <Riostream.h>
 #include <TMath.h>
 
+
 #include <cmath>
 
+
 ClassImp(RooPDF_HiggsAnalysis_Base);
+
 
 RooPDF_HiggsAnalysis_Base::RooPDF_HiggsAnalysis_Base(const char *name, const char *title,
                         RooAbsReal& _x,
@@ -26,16 +31,14 @@ RooPDF_HiggsAnalysis_Base::RooPDF_HiggsAnalysis_Base(const char *name, const cha
                         RooAbsReal& _branch_ratio_1,
                         RooAbsReal& _branch_ratio_2,
                         RooAbsReal& _norm_Systematic,
-                        RooAbsReal& _shape_Systematic,
-                        FitFunction fitFunction)
+                        RooAbsReal& _shape_Systematic)
    : RooAbsPdf(name,title),
    x("x","x",this,_x),
    realHiggsMass("realHiggsMass","realHiggsMass",this,_realHiggsMass),
    branch_ratio_1("branch_ratio_1","branch_ratio_1",this,_branch_ratio_1),
    branch_ratio_2("branch_ratio_2","branch_ratio_2",this,_branch_ratio_2),
    norm_Systematic("norm_Systematic","norm_Systematic",this,_norm_Systematic),
-   shape_Systematic("shape_Systematic","shape_Systematic",this,_shape_Systematic),
-   fitFunction(fitFunction)
+   shape_Systematic("shape_Systematic","shape_Systematic",this,_shape_Systematic)
 {
 }
 
@@ -47,8 +50,7 @@ RooPDF_HiggsAnalysis_Base::RooPDF_HiggsAnalysis_Base(RooPDF_HiggsAnalysis_Base c
    branch_ratio_1("branch_ratio_1",this,other.branch_ratio_1),
    branch_ratio_2("branch_ratio_2",this,other.branch_ratio_2),
    norm_Systematic("norm_Systematic",this,other.norm_Systematic),
-   shape_Systematic("shape_Systematic",this,other.shape_Systematic),
-   fitFunction(other.fitFunction)
+   shape_Systematic("shape_Systematic",this,other.shape_Systematic)
 {
 }
 
@@ -59,14 +61,7 @@ RooPDF_HiggsAnalysis_Base::RooPDF_HiggsAnalysis_Base(RooPDF_HiggsAnalysis_Base c
 
 double RooPDF_HiggsAnalysis_Base::evaluate() const
 {
-   return fitFunction.evaluate(x);
-}
-
-RooFormulaVar RooPDF_HiggsAnalysis_Base::signal_norm(std::string channel_name)
-{
-    std::string formula = std::to_string(fitFunction.getName());
-    RooFormulaVar signal_norm((channel_name + "_norm").c_str(), (channel_name + "_norm").c_str(), formula.c_str(), RooArgList());
-    return signal_norm;
+   return RooPDF_HiggsAnalysis_Base_evaluate(x, realHiggsMass, branch_ratio_1, branch_ratio_2, norm_Systematic, shape_Systematic);
 }
 
 

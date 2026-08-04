@@ -23,14 +23,6 @@ static const int I_DY = 0;
 static const int I_TTZ = 3;
 
 
-// Indices for Gaussian Log Power Norm Parameters (NOTE: THESE ARE TEMPORARY - REPLACE WHEN YOU HAVE VALUES)
-static const int N = 0;
-static const int mean = 1;
-static const int sigma = 2;
-static const int s = 3;
-static const int n = 4;
-
-
 ClassImp(RooPDF_HiggsAnalysis_BKG);
 
 RooPDF_HiggsAnalysis_BKG::RooPDF_HiggsAnalysis_BKG(const char *name, const char *title,
@@ -110,37 +102,20 @@ double RooPDF_HiggsAnalysis_BKG::evaluate() const
 //std::cout << "Starting evaluate()\n";
 std::vector<double> component_functions;
 double function_sum = 0;
-//std::cout << "Number of bkg params: " << bkg_params.size() << '\n';
 for (std::vector<double> bkg_type : bkg_params)
 {
-   // if (bkg_type.size() < 3)
-   // {
-   // continue;
-   // }
+   if (bkg_type.size() < 2)
+   {
+   continue;
+   }
    //std::cerr << "Next loop iteration\n";
    //std::cerr << bkg_type[0] << '\n' << bkg_type[1] << '\n' << bkg_type[2] <<'\n';
 
-   // std::cout << "BKG Components: " << bkg_type[0] << " " << bkg_type[1] << " " << bkg_type[2] << "\n";
+   //std::cout << "BKG Components: " << bkg_type[0] << " " << bkg_type[1] << " " << bkg_type[2] << "\n";
 
-   // std::cout << "x value: " << x << '\n';
 
-   // Old power law?
+
    double bkg_component = bkg_type[0] * std::pow((x - bkg_type[1]),bkg_type[2]);
-   // std::cout << "bkg_component: " << bkg_component << "\n";
-   // Gaussian log power norm
-   // double bkg_component = 1 / 0; // Default nan value
-   // if (x <= bkg_type[mean])
-   // {
-   //    bkg_component = bkg_type[N] * std::exp(std::pow(-(x - bkg_type[mean]), 2.0) / (2 * std::pow(bkg_type[sigma],2)));
-
-   // }
-   // else if (x >= bkg_type[mean])
-   // {
-   //    bkg_component = bkg_type[N] * std::exp(-bkg_type[s] * std::pow(std::log(x / bkg_type[mean]), bkg_type[n]));
-
-   // }
-
-
    bool isNaN = std::isnan(bkg_component);
    if (isNaN)
    {
@@ -154,7 +129,6 @@ for (std::vector<double> bkg_type : bkg_params)
    //std::cout << "Test statement: " << invalidValueTest << "\n";
    component_functions.push_back(bkg_component);
    function_sum += bkg_component;
-
 }
 //std::cout << GetName() << " bkg function_sum: " << function_sum << "\n";
 //std::cout << "\n \n \n";
