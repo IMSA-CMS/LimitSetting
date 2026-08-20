@@ -24,5 +24,6 @@ fi
 cp "${headers[@]}" .
 cp "${sources[@]}" .
 
-git add RooPDF_HiggsAnalysis_*.h RooPDF_HiggsAnalysis_*.cxx setup.sh commit.sh
+#git add RooPDF_HiggsAnalysis_*.h RooPDF_HiggsAnalysis_*.cxx setup.sh commit.sh
+git add .
 git commit -m "$commit_message"
