@@ -50,6 +50,8 @@ struct Channel
 
 void construct_models_Higgs_5();
 
+void makeDatacard(std::string filename, std::vector<Channel> channels);
+
 std::vector<double> split(const std::string& line);
 std::string replaceAll(std::string unmodifiedString, const std::string from, const std::string to);
 
@@ -134,7 +136,34 @@ std::vector<std::vector<double>> Channel::extractParameters()
 	return extractedParameters;
 }
 
+void makeDatacard(std::string filename, std::vector<Channel> channels);
+{
+	    for (const auto& ch : channels) {
+        std::ofstream out(filename + "_" + ch.name + ".txt");
 
+        out << "# Datacard for the " << ch.name << " channel signal and background (Higgs Analysis)\n";
+        out << "---------------------------------------------\n";
+        out << "imax *\n";
+        out << "jmax *\n";
+        out << "kmax *\n";
+        out << "---------------------------------------------\n";
+        out << "\n";
+        out << "shapes\t\t" << ch.name << "_X\t\t\tanalysis_1\t\thiggsworkspace.root\t\t\thiggsworkspace:" << ch.name << "_signal_X\n";
+        out << "shapes\t\tbkg_" << ch.name << "_X\t\tanalysis_1\t\thiggsworkspace.root\t\t\thiggsworkspace:" << ch.name << "_bkg_X\n";
+        out << "shapes      data_obs_X     \tanalysis_1      higgsworkspace.root      \thiggsworkspace:Events900_X\n";
+        out << "\n";
+        out << "---------------------------------------------\n";
+        out << "\n";
+        out << "bin\t\t\t\tanalysis_1\n";
+        out << "observation\t\t-1\n";
+        out << "---------------------------------------------\n";
+        out << "\n";
+        out << "bin\t\t\tanalysis_1\t\tanalysis_1\n";
+        out << "process\t\t" << ch.name << "_X\t\t\tbkg_" << ch.name << "_X\n";
+        out << "process\t\t0\t\t\t\t1\n";
+        out << "rate\t\t1.0\t\t\t\t1.0\n";
+    }
+}
 
 // Splits parameter lines by spaces, skipping the first entry (which I used as a name and not a value I actually need)
 std::vector<double> split(const std::string& line)
