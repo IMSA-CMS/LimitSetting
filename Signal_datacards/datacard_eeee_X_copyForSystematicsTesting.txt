@@ -5,7 +5,7 @@ jmax *
 kmax *
 ---------------------------------------------
 
-shapes		eeee_X			analysis_1		higgsworkspace.root			higgsworkspace:eeee_signal_X
+shapes		eeee_X			analysis_1		higgsworkspace.root			higgsworkspace:eeee_X
 shapes		bkg_eeee_X		analysis_1		higgsworkspace.root			higgsworkspace:eeee_bkg_X
 shapes      data_obs     	analysis_1      higgsworkspace.root      	higgsworkspace:Events900_X
 

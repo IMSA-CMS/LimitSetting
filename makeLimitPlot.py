@@ -111,7 +111,7 @@ def makeLimitPlot(output,exp,printStats=False,ratioLabel=""):#chan, -4th karedit
 	
 	
 	
-	file = open("realHiggsMass,medianLimit_fromCombineCommands.txt")
+	file = open("higgsLimits.txt")
 	allMasses = []
 	median_limits =[]
 	_1Sigma_lower = []
@@ -161,10 +161,10 @@ def makeLimitPlot(output,exp,printStats=False,ratioLabel=""):#chan, -4th karedit
 	limits = {}
 	for i in range(0,len(allMasses)):
 		cross = cross_sections[allMasses[i]]
-		#limits[allMasses[i]] = [float(median_limits[i]) * cross,float(_1Sigma_lower[i]) * cross,float(_1Sigma_upper[i]) * cross,float(_2Sigma_lower[i]) * cross,float(_2Sigma_upper[i]) * cross]
-		limits[allMasses[i]] = [float(median_limits[i]),float(_1Sigma_lower[i]),float(_1Sigma_upper[i]),float(_2Sigma_lower[i]),float(_2Sigma_upper[i])]
-		for j in range(len(limits[allMasses[i]])):
-			limits[allMasses[i]][j] /= (137000 * 0.4)
+		limits[allMasses[i]] = [float(median_limits[i]) * cross,float(_1Sigma_lower[i]) * cross,float(_1Sigma_upper[i]) * cross,float(_2Sigma_lower[i]) * cross,float(_2Sigma_upper[i]) * cross]
+		# limits[allMasses[i]] = [float(median_limits[i]),float(_1Sigma_lower[i]),float(_1Sigma_upper[i]),float(_2Sigma_lower[i]),float(_2Sigma_upper[i])]
+		# for j in range(len(limits[allMasses[i]])):
+		# 	limits[allMasses[i]][j] /= (137000)
 
 
 
