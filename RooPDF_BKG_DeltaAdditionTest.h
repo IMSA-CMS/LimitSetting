@@ -18,7 +18,7 @@
 class RooPDF_BKG_DeltaAdditionTest : public RooAbsPdf {
 public:
    RooPDF_BKG_DeltaAdditionTest() {}
-   RooPDF_BKG_DeltaAdditionTest(const char *name, const char *title,        RooAbsReal& _x, const double _delta, const std::vector<std::vector<double>>& _bkg_params,
+   RooPDF_BKG_DeltaAdditionTest(const char *name, const char *title,        RooAbsReal& _x, const double _shapeSystematic, const std::vector<std::vector<double>>& _bkg_params,
                         const std::vector<std::vector<double>>& _bkg_paramUpperValues,
                         const std::vector<std::vector<double>>& _bkg_paramLowerValues,
                         const std::string _channel_name);
