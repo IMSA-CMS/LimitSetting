@@ -8,8 +8,8 @@ fi
 
 commit_message="$1"
 
-headers=(../interface/RooPDF_HiggsAnalysis_*.h)
-sources=(../src/RooPDF_HiggsAnalysis_*.cxx)
+headers=(../interface/FitFunctionPDF.h)
+sources=(../src/FitFunctionPDF.cxx)
 
 if (( ${#headers[@]} == 0 )); then
   echo "No RooPDF_HiggsAnalysis headers found in ../interface" >&2
