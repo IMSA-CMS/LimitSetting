@@ -36,6 +36,7 @@
 #include "RooGenericPdf.h"
 #include "HiggsAnalysis/CombinedLimit/interface/FitFunction.hh"
 #include "HiggsAnalysis/CombinedLimit/interface/FitFunctionCollection.hh"
+#include "FitFunctionPDF.h"
 
 
 struct Process
@@ -198,8 +199,8 @@ void construct_models_Higgs_5_BaseClass()
 			}
 
 
-			std::vector<std::vector<double>> parameters = signalChannel.extractParameters();
-			auto* signal_pdf = new RooPDF_HiggsAnalysis_DSCB((channel.name + "_signal_" + X_or_Y).c_str(), (channel.name + "_signal").c_str(), mass, realHiggsMass, Bee, Beu, norm_Systematic, shape_Systematic, parameters, false); 
+			// std::vector<std::vector<double>> parameters = signalChannel.extractParameters();
+			auto* signal_pdf = new FitFunctionPDF((channel.name + "_signal_" + X_or_Y).c_str(), (channel.name + "_signal").c_str(), mass, realHiggsMass, Bee, Beu, norm_Systematic, shape_Systematic, channel.signal.function); //is this right???
 
 			auto signal_norm = signal_pdf->signal_norm(fullChannelName + "_signal");
 
@@ -212,20 +213,9 @@ void construct_models_Higgs_5_BaseClass()
 			for (auto& backgroundProcess : channel.backgrounds)
 			{
 
-			std::vector<std::vector<double>> bkg_types_params = backgroundChannel.extractParameters();
-
-			auto* bkg_pdf = new RooPDF_HiggsAnalysis_BKG(
-				(channel.name + "_bkg_" + X_or_Y).c_str(),
-				(channel.name + "_bkg").c_str(),
-				mass, 
-				realHiggsMass, 
-				Bee, 
-				Beu, 
-				norm_Systematic, 
-				shape_Systematic,
-				bkg_types_params,
-				channel.name
-			);
+			// std::vector<std::vector<double>> bkg_types_params = backgroundChannel.extractParameters();
+			auto* bkg_pdf = new FitFunctionPDF(
+				(channel.name + "_bkg_" + X_or_Y).c_str(), (channel.name + "_bkg").c_str(), mass, realHiggsMass, Bee, Beu, norm_Systematic, shape_Systematic, backgroundProcess.function); //search for the right bkg fitfunction, should be in this file, use my searching function to find which one??
 					
 				RooRealVar bkg_norm((fullChannelName + "_bkg_norm").c_str(), (fullChannelName + "_bkg_norm").c_str(),
 					bkg_pdf->getNorm(mass));
@@ -233,7 +223,7 @@ void construct_models_Higgs_5_BaseClass()
 				backgroundProcess.norm = &bkg_norm;
 
 				// Import background
-				std::cout << "Importing Background PDF " << bkg_pdf_for_norm->GetName() << "\n";
+				std::cout << "Importing Background PDF " << bkg.pdf->GetName() << "\n";
 				w_sig.import(*bkg_pdf);
 				std::cout << "Importing Background Normalization " << bkg_norm.GetName() << "\n";
 				w_sig.import(bkg_norm);
@@ -247,7 +237,6 @@ void construct_models_Higgs_5_BaseClass()
 	w_sig.Write();
 	f_out.Close();
 }
-
 
 
 // make a graph using vectors since ROOT needs arrays
