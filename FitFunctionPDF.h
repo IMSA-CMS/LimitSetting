@@ -14,7 +14,7 @@
 #include "RooCategoryProxy.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
-#include "FitFunction.hh"
+#include "CMSAnalysis/Analysis/interface/FitFunction.hh"
 
 
 #include <complex>
