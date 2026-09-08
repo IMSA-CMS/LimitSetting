@@ -11,15 +11,15 @@
 #include "../interface/FitFunctionPDF.h"
 
 
-#include <RooAbsReal.h>
-#include <RooAbsCategory.h>
+// #include <RooAbsReal.h>
+// #include <RooAbsCategory.h>
 
 
-#include <Riostream.h>
-#include <TMath.h>
+// #include <Riostream.h>
+// #include <TMath.h>
 
 
-#include <cmath>
+// #include <cmath>
 
 
 ClassImp(FitFunctionPDF);
@@ -67,6 +67,15 @@ double FitFunctionPDF::evaluate() const
    return function.evaluate(x.arg().getVal());
 }
 
+
+RooFormulaVar FitFunctionPDF::signal_norm(std::string channel_name)
+{
+   std::string normExpression = "@1 * (" + function.getNormExpression("@0") + ")";
+   std::string normName = channel_name + "_norm";
+
+   return RooFormulaVar(normName.c_str(), normName.c_str(), normExpression.c_str(),
+                        RooArgList(*realHiggsMass.absArg(), *norm_Systematic.absArg()));
+}
 
 
 

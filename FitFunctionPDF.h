@@ -14,7 +14,7 @@
 #include "RooCategoryProxy.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
-#include "FitFunction.hh"
+#include "CMSAnalysis/Analysis/interface/FitFunction.hh"
 
 
 #include <complex>
@@ -33,6 +33,7 @@ public:
         RooAbsReal& _shape_Systematic,
         FitFunction function);
   FitFunctionPDF(FitFunctionPDF const &other, const char *name=nullptr);
+  TObject *clone(const char *newName) const override { return new FitFunctionPDF(*this, newName); }
 
 
   double evaluate() const override;
@@ -50,7 +51,7 @@ protected:
 
  
 private:
-  FitFunction function;
+  mutable FitFunction function;
 
   ClassDefOverride(FitFunctionPDF, 1) // Your description goes here...
 };

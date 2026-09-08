@@ -61,7 +61,6 @@ void construct_models_Higgs_5();
 
 std::string replaceAll(std::string unmodifiedString, const std::string from, const std::string to);
 
-TGraph makeGraph(double numCoords, std::vector<double>& xCoords, std::vector<double>& yCoords);
 
 // RooFormulaVar get_signal_norm(std::string channel_name, std::vector<std::string> parameterSet, RooRealVar& realHiggsMass);
 
@@ -182,12 +181,6 @@ void construct_models_Higgs_5_BaseClass()
 		channels.push_back(Channel(channelName));
 	}
 
-	TFile f_out("higgsworkspace.root", "RECREATE");
-	RooWorkspace w_sig("higgsworkspace","higgsworkspace");
-
-	w_sig.import(mc_X);
-	w_sig.import(mc_Y);
-
 	for (auto& channel : channels)
 	{
 		std::cout << "Processing " << channel.name << " channels\n";
@@ -197,18 +190,18 @@ void construct_models_Higgs_5_BaseClass()
 			const std::string fullChannelName = channel.name + "_" + X_or_Y;
 			std::cout << "Processing " << fullChannelName << "\n";
 
-			FitFunctionCollection signalFunctions = signalCollection.getFunctions("channel", fullChannelName).getFunctions("projection", X_or_Y);
-			FitFunctionCollection backgroundFunctions = backgroundCollection.getFunctions("channel", fullChannelName).getFunctions("projection", X_or_Y);
+			auto signalFunctions = signalCollection.getFunctions("channel", fullChannelName).getFunctions("projection", X_or_Y).getFunctions();
+			auto backgroundFunctions = backgroundCollection.getFunctions("channel", fullChannelName).getFunctions("projection", X_or_Y).getFunctions();
 
-			for (auto& [key, sig] : signalFunctions.getFunctions())
+			for (auto& sig : signalFunctions)
 			{
-				channel.signal.function = sig;
+				channel.signal.function = sig.second;
 			}
 
-			for (auto& [key, bg] : backgroundFunctions.getFunctions())
+			for (auto& bg : backgroundFunctions)
 			{
 				Process backgroundProcess;
-				backgroundProcess.function = bg;
+				backgroundProcess.function = bg.second;
 				channel.backgrounds.push_back(backgroundProcess);
 			}
 
@@ -219,10 +212,10 @@ void construct_models_Higgs_5_BaseClass()
 			auto signal_norm = signal_pdf->signal_norm(fullChannelName + "_signal");
 
 			// Import signal
-			std::cout << "Importing Signal PDF " << channel.signal.pdf->GetName() << "\n";
+			std::cout << "Importing Signal PDF " << signal_pdf->GetName() << "\n";
 			w_sig.import(*signal_pdf);
-			std::cout << "Importing Signal Normalization " << channel.signal.norm->GetName() << "\n";
-			w_sig.import(*signal_norm);
+			std::cout << "Importing Signal Normalization " << signal_norm.GetName() << "\n";
+			w_sig.import(signal_norm);
 
 			for (auto& backgroundProcess : channel.backgrounds)
 			{
@@ -232,12 +225,12 @@ void construct_models_Higgs_5_BaseClass()
 				(channel.name + "_bkg_" + X_or_Y).c_str(), (channel.name + "_bkg").c_str(), mass, realHiggsMass, Bee, Beu, norm_Systematic, shape_Systematic, backgroundProcess.function); //search for the right bkg fitfunction, should be in this file, use my searching function to find which one??
 					
 				RooRealVar bkg_norm((fullChannelName + "_bkg_norm").c_str(), (fullChannelName + "_bkg_norm").c_str(),
-					bkg_pdf->getNorm(mass));
+					std::stod(backgroundProcess.function.getNormExpression("")));
 				bkg_norm.setConstant(true);
 				backgroundProcess.norm = &bkg_norm;
 
 				// Import background
-				std::cout << "Importing Background PDF " << bkg.pdf->GetName() << "\n";
+				std::cout << "Importing Background PDF " << bkg_pdf->GetName() << "\n";
 				w_sig.import(*bkg_pdf);
 				std::cout << "Importing Background Normalization " << bkg_norm.GetName() << "\n";
 				w_sig.import(bkg_norm);
@@ -250,26 +243,4 @@ void construct_models_Higgs_5_BaseClass()
 	std::cout << "Writing to workspace\n";
 	w_sig.Write();
 	f_out.Close();
-}
-
-
-// make a graph using vectors since ROOT needs arrays
-TGraph makeGraph(double numCoords, std::vector<double>& xCoords, std::vector<double>& yCoords)
-{
-	//Transfer the vector input to an array (used in TGraph)
-	int arraySizeX = xCoords.size();
-	int arraySizeY = yCoords.size();
-	double xArray[arraySizeX], yArray[arraySizeY];
-	for (int i=0; i < arraySizeX; i++)
-	{
-		xArray[i] = xCoords[i];
-	}
-
-	for (int i = 0; i < arraySizeY; i++)
-	{
-		yArray[i] = yCoords[i];
-	}
-
-	TGraph graph(numCoords, xArray, yArray);
-	return graph;
 }
