@@ -36,21 +36,17 @@
 #include "RooArgList.h"
 #include "RooGenericPdf.h"
 
+
 #include "FitFunctionPDF.h"
 #include "CMSAnalysis/Analysis/interface/FitFunction.hh"
 #include "CMSAnalysis/Analysis/interface/FitFunctionCollection.hh"
 
 
-struct Process
-{
-	FitFunction function;
-	RooAbsPdf* pdf = nullptr;
-	RooAbsReal* norm = nullptr;
-};
 
 struct Channel
 {
 	std::string name;
+
 	Process signal;
 	std::vector<Process> backgrounds;
 	Channel(std::string channelName) : name(channelName) {}
@@ -59,10 +55,63 @@ struct Channel
 
 void construct_models_Higgs_5();
 
+std::vector<double> split(const std::string& line);
 std::string replaceAll(std::string unmodifiedString, const std::string from, const std::string to);
 
 
-// RooFormulaVar get_signal_norm(std::string channel_name, std::vector<std::string> parameterSet, RooRealVar& realHiggsMass);
+
+
+void makeCombinedDatacard(std::string filename, std::vector<Channel> channels)
+{
+    std::vector<std::string> variants = {"X", "Y"};
+    std::ofstream out(filename + ".txt");
+    int nBins = channels.size() * variants.size();
+    // header
+    out << "imax " << nBins << "\n";
+    out << "jmax " << (2 * nBins - 1) << "\n";
+    out << "kmax *\n";
+    out << "---------------------------------------------\n";
+    // shapes block
+    for (size_t i = 0; i < channels.size(); i++) {
+        for (size_t j = 0; j < variants.size(); j++) {
+            std::string ch = channels[i].name;
+            std::string var = variants[j];
+            std::string bin = "ch" + std::to_string(i+1) + "_ch" + std::to_string(j+1);
+            out << "shapes " << ch << "_" << var << "  " << bin
+                << "  higgsworkspace.root  higgsworkspace:" << ch << "_signal_" << var << "\n";
+            out << "shapes bkg_" << ch << "_" << var << "  " << bin
+                << "  higgsworkspace.root  higgsworkspace:" << ch << "_bkg_" << var << "\n";
+            out << "shapes data_obs  " << bin
+                << "  higgsworkspace.root  higgsworkspace:Events900_" << var << "\n";
+        }
+    }
+    out << "---------------------------------------------\n";
+    // bin / observation
+    out << "bin  ";
+    for (size_t i = 0; i < channels.size(); i++)
+        for (size_t j = 0; j < variants.size(); j++)
+            out << "ch" << i+1 << "_ch" << j+1 << "  ";
+    out << "\nobservation  ";
+    for (int i = 0; i < nBins; i++) out << "-1  ";
+    out << "\n---------------------------------------------\n";
+    // process rows
+    out << "bin  ";
+    for (size_t i = 0; i < channels.size(); i++)
+        for (size_t j = 0; j < variants.size(); j++) {
+            std::string bin = "ch" + std::to_string(i+1) + "_ch" + std::to_string(j+1);
+            out << bin << "  " << bin << "  ";
+        }
+    out << "\nprocess  ";
+    for (auto& ch : channels)
+        for (auto& var : variants)
+            out << ch.name << "_" << var << "  bkg_" << ch.name << "_" << var << "  ";
+    out << "\nprocess  ";
+    for (int i = 0; i < nBins; i++)
+        out << "0  1  ";
+    out << "\nrate  ";
+    for (int i = 0; i < 2 * nBins; i++) out << "1  ";
+    out << "\n---------------------------------------------\n";
+}
 
 std::string replaceAll(std::string unmodifiedString, const std::string from, const std::string to)
 {
@@ -83,20 +132,36 @@ std::string replaceAll(std::string unmodifiedString, const std::string from, con
 // Creates the Signal Normalization Object for a channel - The Normalization object must vary with mass when it is added to workspace, which is why it is a FormulaVar and not just be the integral over the signal pdf object 
 // RooFormulaVar get_signal_norm(std::string channel_name, std::vector<std::string> parameterSet, RooRealVar& realHiggsMass)
 // {
-// 	std::cout << "signal_norm_error0" << "\n";
-// 	std::vector<std::vector<double>> parameters = getParameters(parameterSet);
+// 	std::map<std::string, std::vector<std::vector<double>>> parameters;
+ 
+// 	for (const auto [channel, parameters] : sortedFunctions)
+// 	{
+// 		// Record channels
+// 		if (std::find(channelNames->begin(), channelNames->end(), channel) == channelNames->end())
+// 		{
+// 			channelNames->push_back(channel);
+// 		}
+		
+// 		// Retrieve parameters from a channel
+// 		for (auto fitFunctionParameter : parameters)
+// 		{
+// 			auto parameter = fitFunctionParameter.getFunction();
+// 			std::vector<double> parameterValues;
+// 			for (int i = 0; i < parameter->GetNpar(); ++i)
+// 			{
+// 				parameterValues.push_back(parameter->GetParameter(i));
+// 			}
 
-// 	std::cout << "signal_norm_error1" << "\n";
+// 			for (int i = 0; i < parameter->GetNpar(); ++i)
+// 			{
+// 				parameterValues.push_back(parameter->GetParError(i));
+// 			}
 
-// 	std::string norm_string = std::to_string(parameters[6][0]) +  "* (@0 - " + std::to_string(parameters[6][1]) + ")^" + std::to_string(parameters[6][2]) + " + " + std::to_string(parameters[6][3]);
-	
-// 	std::cout << "signal_norm_error2" << "\n";
+// 			parameters[channel].push_back(parameterValues);
+// 		}
 
-// 	// (The naming stuff is for consistency, I don't think it matters since I am copying the object out of the function anyway)
-// 	RooFormulaVar norm((channel_name + "_signal_norm").c_str(), (channel_name + "_signal_norm").c_str(), norm_string.c_str(), RooArgList(realHiggsMass)); 
-
-// 	std::cout << "signal_norm_error3" << "\n";
-// 	return norm;
+// 	}
+// 	return parameters;
 // }
 
 
@@ -163,6 +228,8 @@ void construct_models_Higgs_5_BaseClass()
 
 
 	// We will want to change how these lists are handled..
+
+	// std::vector<std::string> channel_names {"eeee", "eeeu", "eeuu", "eueu", "euuu", "uuuu"};
 	std::vector<std::string> signs {"X", "Y"};
 	std::vector<std::string> channelsToCheck = {"eeee", "uuuu"};
 
@@ -240,7 +307,7 @@ void construct_models_Higgs_5_BaseClass()
 
 	w_sig.Print("v");
 	std::cout << "\n";
-	std::cout << "Writing to workspace\n";
+	std::cout << "Writing to workspace \n";
 	w_sig.Write();
 	f_out.Close();
 }
