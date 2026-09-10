@@ -165,7 +165,7 @@ std::string replaceAll(std::string unmodifiedString, const std::string from, con
 // }
 
 
-void construct_models_Higgs_5_BaseClass()
+void prepareForLimit()
 {
 	gROOT->SetBatch(true); // I can't remember what this does exactly, but it needs to be here
 
