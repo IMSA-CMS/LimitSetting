@@ -257,8 +257,8 @@ void prepareForLimit()
 			const std::string fullChannelName = channel.name + "_" + X_or_Y;
 			std::cout << "Processing " << fullChannelName << "\n";
 
-			auto signalFunctions = signalCollection.getFunctions("channel", fullChannelName).getFunctions("projection", X_or_Y).getFunctions();
-			auto backgroundFunctions = backgroundCollection.getFunctions("channel", fullChannelName).getFunctions("projection", X_or_Y).getFunctions();
+			auto signalFunctions = signalCollection.getFunctions("channel", fullChannelName).getFunctions("projection", X_or_Y).getFunctionsMap();
+			auto backgroundFunctions = backgroundCollection.getFunctions("channel", fullChannelName).getFunctions("projection", X_or_Y).getFunctionsMap();
 
 			for (auto& sig : signalFunctions)
 			{
