@@ -7,6 +7,9 @@
 #include <sstream>
 #include <unordered_map>
 #include <typeinfo>
+#include <map>
+#include <memory>
+#include <stdexcept>
 
 #include "TFile.h"
 #include "TF1.h"
@@ -37,6 +40,7 @@
 #include "FitFunctionPDF.h"
 #include "CMSAnalysis/Analysis/interface/FitFunction.hh"
 #include "CMSAnalysis/Analysis/interface/FitFunctionCollection.hh"
+#include "CMSAnalysis/Analysis/interface/FitFunctionParameterization.hh"
 
 struct Process
 {
@@ -49,8 +53,6 @@ struct Channel
 {
 	std::string name;
 
-	Process signal;
-	std::vector<Process> backgrounds;
 	Channel(std::string channelName) : name(channelName) {}
 
 };
@@ -61,6 +63,43 @@ std::string replaceAll(std::string unmodifiedString, const std::string from, con
 
 
 
+
+std::unique_ptr<FitFunction> makeSignalModel(FitFunctionCollection &collection,
+                                           const std::string &channel, double min, double max)
+{
+    if (collection.size() == 0)
+        throw std::runtime_error("No signal functions for " + channel);
+    const auto &candidate = collection.getFunctionsMap().begin()->second;
+    if (candidate.getParameter("ParameterIndex").empty())
+    {
+        if (collection.size() != 1)
+            throw std::runtime_error("wanted one signal model for " + channel);
+        return std::make_unique<SimpleFitFunction>(candidate);
+    }
+
+    std::vector<SimpleFitFunction> functions;
+    for (size_t i = 0; i < collection.size(); ++i)
+    {
+        auto row = collection.getFunctions("ParameterIndex", std::to_string(i));
+        if (row.size() != 1)
+            throw std::runtime_error("bad signal parameter group for " + channel);
+        functions.push_back(row.getFunctionsMap().begin()->second);
+    }
+    const auto &first = functions.front();
+    const auto type = static_cast<FitFunction::FunctionType>(std::stoi(first.getParameter("OriginalFunctionType")));
+    const auto shape = SimpleFitFunction::createFunctionOfType(type, "", "", min, max);
+    if (functions.size() != static_cast<size_t>(shape.getFunction()->GetNpar()))
+        throw std::runtime_error("bad/  or multiple signal parameter groups for " + channel);
+    if (collection.findUniqueNames("GenSim").size() != 1 ||
+        collection.findUniqueNames("OriginalFunctionType").size() != 1)
+        throw std::runtime_error("bad signal parameter group for " + channel);
+    auto model = std::make_unique<FitFunctionParameterization>(first.getName(), channel, type, "", min, max);
+    for (const auto &function : functions)
+    {
+        model->insert(function);
+    }
+    return model;
+}
 
 void makeCombinedDatacard(std::string filename, std::vector<Channel> channels)
 {
@@ -196,6 +235,8 @@ void prepareForLimit()
 	RooRealVar shape_Systematic("shape_systematic", "shape_systematic", 0, -5, 5);
 	norm_Systematic.setConstant(true);
 	shape_Systematic.setConstant(true);
+	// Need to keep the signal nusiances alive until all pdfs are imported
+	std::map<std::string, std::unique_ptr<RooRealVar>> shapeNuisances;
 	
 	// For now, we don't need this variable to be able to change
 	Bee.setConstant(true);
@@ -258,26 +299,37 @@ void prepareForLimit()
 			const std::string fullChannelName = channel.name + "_" + X_or_Y;
 			std::cout << "Processing " << fullChannelName << "\n";
 
-			auto signalFunctions = signalCollection.getFunctions("channel", fullChannelName).getFunctions("projection", X_or_Y).getFunctions();
-			auto backgroundFunctions = backgroundCollection.getFunctions("channel", fullChannelName).getFunctions("projection", X_or_Y).getFunctions();
+			// read channel 
+			auto signalFunctions = signalCollection.getFunctions("Channel", channel.name).getFunctions(X_or_Y + " Projection");
+			const auto signalModel = makeSignalModel(signalFunctions, channel.name, mass.getMin(), mass.getMax());
+			auto backgroundFunctions = backgroundCollection.getFunctions("channel", channel.name).getFunctions(X_or_Y + " Projection").getFunctionsMap();
 
-			for (auto& sig : signalFunctions)
+			const auto shapeNames = signalModel->listSystematics();
+			RooArgList shapeDeltas;
+			for (const auto& name : shapeNames)
 			{
-				channel.signal.function = sig.second;
+				// RooFit needs whitespace trimmed
+				const auto first = name.find_first_not_of(" \t\r\n");
+				const std::string nuisanceName = first == std::string::npos ? "" :
+					name.substr(first, name.find_last_not_of(" \t\r\n") - first + 1);
+				if (nuisanceName.empty() || nuisanceName.find_first_not_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_") != std::string::npos)
+					throw std::invalid_argument("Invalid shape-systematic name: " + name);
+				if (nuisanceName == mass.GetName() || nuisanceName == realHiggsMass.GetName() ||
+				    nuisanceName == Bee.GetName() || nuisanceName == Beu.GetName() ||
+				    nuisanceName == norm_Systematic.GetName() || nuisanceName == shape_Systematic.GetName())
+					throw std::invalid_argument("Shape-systematic name collides with a model variable: " + name);
+				// construct delta
+				auto& delta = shapeNuisances[nuisanceName];
+				if (!delta)
+					delta = std::make_unique<RooRealVar>(nuisanceName.c_str(), nuisanceName.c_str(), 0.0, -5.0, 5.0);
+				shapeDeltas.add(*delta);
 			}
+			auto signal_pdf = std::make_unique<FitFunctionPDF>(
+				(channel.name + "_signal_" + X_or_Y).c_str(), (channel.name + "_signal").c_str(),
+				mass, realHiggsMass, Bee, Beu, norm_Systematic, shape_Systematic,
+				*signalModel, shapeNames, shapeDeltas);
 
-			for (auto& bg : backgroundFunctions)
-			{
-				Process backgroundProcess;
-				backgroundProcess.function = bg.second;
-				channel.backgrounds.push_back(backgroundProcess);
-			}
-
-
-			// std::vector<std::vector<double>> parameters = signalChannel.extractParameters();
-			auto* signal_pdf = new FitFunctionPDF((channel.name + "_signal_" + X_or_Y).c_str(), (channel.name + "_signal").c_str(), mass, realHiggsMass, Bee, Beu, norm_Systematic, shape_Systematic, channel.signal.function); //is this right???
-
-			auto signal_norm = signal_pdf->signal_norm(fullChannelName + "_signal");
+			auto signal_norm = signal_pdf->signal_norm(signal_pdf->GetName());
 
 			// Import signal
 			std::cout << "Importing Signal PDF " << signal_pdf->GetName() << "\n";
@@ -285,17 +337,16 @@ void prepareForLimit()
 			std::cout << "Importing Signal Normalization " << signal_norm.GetName() << "\n";
 			w_sig.import(signal_norm);
 
-			for (auto& backgroundProcess : channel.backgrounds)
+			for (auto& [key, backgroundFunction] : backgroundFunctions)
 			{
 
 			// std::vector<std::vector<double>> bkg_types_params = backgroundChannel.extractParameters();
 			auto* bkg_pdf = new FitFunctionPDF(
-				(channel.name + "_bkg_" + X_or_Y).c_str(), (channel.name + "_bkg").c_str(), mass, realHiggsMass, Bee, Beu, norm_Systematic, shape_Systematic, backgroundProcess.function); //search for the right bkg fitfunction, should be in this file, use my searching function to find which one??
+				(channel.name + "_bkg_" + X_or_Y).c_str(), (channel.name + "_bkg").c_str(), mass, realHiggsMass, Bee, Beu, norm_Systematic, shape_Systematic, backgroundFunction); //search for the right bkg fitfunction, should be in this file, use my searching function to find which one??
 					
-				RooRealVar bkg_norm((fullChannelName + "_bkg_norm").c_str(), (fullChannelName + "_bkg_norm").c_str(),
-					std::stod(backgroundProcess.function.getNormExpression("")));
+				RooRealVar bkg_norm((std::string(bkg_pdf->GetName()) + "_norm").c_str(), (std::string(bkg_pdf->GetName()) + "_norm").c_str(),
+					std::stod(backgroundFunction.getNormExpression("")));
 				bkg_norm.setConstant(true);
-				backgroundProcess.norm = &bkg_norm;
 
 				// Import background
 				std::cout << "Importing Background PDF " << bkg_pdf->GetName() << "\n";
@@ -311,4 +362,12 @@ void prepareForLimit()
 	std::cout << "Writing to workspace \n";
 	w_sig.Write();
 	f_out.Close();
+
+	// Add constraints once to datacard with kmax *
+	// this works for some reason?
+	std::ofstream shapeConstraints("signal_shape_systematics.txt");
+	if (!shapeConstraints)
+		throw std::runtime_error("Cannot write signal_shape_systematics.txt");
+	for (const auto& entry : shapeNuisances)
+		shapeConstraints << entry.first << " param 0 1\n";
 }

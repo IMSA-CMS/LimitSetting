@@ -11,13 +11,19 @@
 
 #include "RooAbsPdf.h"
 #include "RooRealProxy.h"
+#include "RooArgList.h"
+#include "RooListProxy.h"
 #include "RooCategoryProxy.h"
 #include "RooAbsReal.h"
 #include "RooAbsCategory.h"
 #include "CMSAnalysis/Analysis/interface/FitFunction.hh"
+#include "CMSAnalysis/Analysis/interface/FitFunctionParameterization.hh"
+#include "CMSAnalysis/Analysis/interface/SimpleFitFunction.hh"
 
 
 #include <complex>
+#include <string>
+#include <vector>
 #include "RooFormulaVar.h"
 
 
@@ -31,13 +37,23 @@ public:
         RooAbsReal& _branch_ratio_2,
         RooAbsReal& _norm_Systematic,
         RooAbsReal& _shape_Systematic,
-        FitFunction function);
+        const FitFunction &function);
+   // New
+   FitFunctionPDF(const char *name, const char *title, RooAbsReal& _x,
+        RooAbsReal& _realHiggsMass,
+        RooAbsReal& _branch_ratio_1,
+        RooAbsReal& _branch_ratio_2,
+        RooAbsReal& _norm_Systematic,
+        RooAbsReal& _shape_Systematic,
+        const FitFunction &function,
+        const std::vector<std::string>& systematicNames,
+        const RooArgList& deltas);
   FitFunctionPDF(FitFunctionPDF const &other, const char *name=nullptr);
   TObject *clone(const char *newName) const override { return new FitFunctionPDF(*this, newName); }
 
 
   double evaluate() const override;
-  RooFormulaVar signal_norm(std::string channel_name);
+  RooFormulaVar signal_norm(std::string channel_name) const;
 protected:
 
 
@@ -47,13 +63,20 @@ protected:
   RooRealProxy branch_ratio_2 ;
   RooRealProxy norm_Systematic ;
   RooRealProxy shape_Systematic ;
+  RooListProxy shape_Systematics{"shape_Systematics", "shape_Systematics", this};
 
 
  
 private:
-  mutable FitFunction function;
+//easier assign
+  const FitFunction &model() const;
 
-  ClassDefOverride(FitFunctionPDF, 1) // Your description goes here...
+  SimpleFitFunction simpleFunction;
+  FitFunctionParameterization parameterizedFunction;
+  bool isParameterized = false;
+  std::vector<std::string> shapeSystematicNames;
+
+  ClassDefOverride(FitFunctionPDF, 3)
 };
 
 
