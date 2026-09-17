@@ -19,7 +19,10 @@
 // #include <TMath.h>
 
 
-// #include <cmath>
+#include <algorithm>
+#include <cmath>
+#include <set>
+#include <stdexcept>
 
 
 ClassImp(FitFunctionPDF);
@@ -32,16 +35,62 @@ FitFunctionPDF::FitFunctionPDF(const char *name, const char *title,
                         RooAbsReal& _branch_ratio_2,
                         RooAbsReal& _norm_Systematic,
                         RooAbsReal& _shape_Systematic,
-                        FitFunction function)
+                        const FitFunction &model)
    : RooAbsPdf(name,title),
    x("x","x",this,_x),
    realHiggsMass("realHiggsMass","realHiggsMass",this,_realHiggsMass),
    branch_ratio_1("branch_ratio_1","branch_ratio_1",this,_branch_ratio_1),
    branch_ratio_2("branch_ratio_2","branch_ratio_2",this,_branch_ratio_2),
    norm_Systematic("norm_Systematic","norm_Systematic",this,_norm_Systematic),
-   shape_Systematic("shape_Systematic","shape_Systematic",this,_shape_Systematic),
-   function(function)
+   shape_Systematic("shape_Systematic","shape_Systematic",this,_shape_Systematic)
 {
+   // assign simple/parameterized
+   if (const auto *simple = dynamic_cast<const SimpleFitFunction*>(&model))
+   {
+      simpleFunction = *simple;
+   }
+   else if (const auto *parameterized = dynamic_cast<const FitFunctionParameterization*>(&model))
+   {
+      parameterizedFunction = *parameterized;
+      isParameterized = true;
+   }
+   else
+   {
+      throw std::invalid_argument("FitFunctionPDF received an unsupported FitFunction implementation");
+   }
+}
+
+
+FitFunctionPDF::FitFunctionPDF(const char *name, const char *title,
+                        RooAbsReal& _x, RooAbsReal& _realHiggsMass,
+                        RooAbsReal& _branch_ratio_1, RooAbsReal& _branch_ratio_2,
+                        RooAbsReal& _norm_Systematic, RooAbsReal& _shape_Systematic,
+                        const FitFunction &model,
+                        const std::vector<std::string>& systematicNames,
+                        const RooArgList& deltas)
+   : FitFunctionPDF(name, title, _x, _realHiggsMass, _branch_ratio_1,
+                    _branch_ratio_2, _norm_Systematic, _shape_Systematic, model)
+{
+   // need to check
+   if (systematicNames.size() != static_cast<std::size_t>(deltas.getSize()))
+      throw std::invalid_argument("Systematic names must match the delta list");
+
+   std::set<std::string> seen;
+   const auto availableSystematics = this->model().listSystematics();
+   for (std::size_t i = 0; i < systematicNames.size(); ++i)
+   {
+      // add sys names/dels in right manner
+      const auto& systematic = systematicNames[i];
+      const auto* delta = dynamic_cast<const RooAbsReal*>(deltas.at(static_cast<int>(i)));
+      if (!delta || shape_Systematics.find(delta->GetName()))
+         throw std::invalid_argument("Shape deltas must be RooAbsReal objects with unique names");
+      if (!seen.insert(systematic).second)
+         throw std::invalid_argument("Duplicate shape systematic: " + systematic);
+      if (std::find(availableSystematics.begin(), availableSystematics.end(), systematic) == availableSystematics.end())
+         throw std::invalid_argument("Unknown or incomplete shape systematic: " + systematic);
+      shapeSystematicNames.push_back(systematic);
+      shape_Systematics.add(*delta);
+   }
 }
 
 
@@ -53,7 +102,11 @@ FitFunctionPDF::FitFunctionPDF(FitFunctionPDF const &other, const char *name)
    branch_ratio_2("branch_ratio_2",this,other.branch_ratio_2),
    norm_Systematic("norm_Systematic",this,other.norm_Systematic),
    shape_Systematic("shape_Systematic",this,other.shape_Systematic),
-   function(other.function)
+   shape_Systematics("shape_Systematics",this,other.shape_Systematics),
+   simpleFunction(other.simpleFunction),
+   parameterizedFunction(other.parameterizedFunction),
+   isParameterized(other.isParameterized),
+   shapeSystematicNames(other.shapeSystematicNames)
 {
 }
 
@@ -64,23 +117,33 @@ FitFunctionPDF::FitFunctionPDF(FitFunctionPDF const &other, const char *name)
 
 double FitFunctionPDF::evaluate() const
 {
-   return function.evaluate(x.arg().getVal());
+   FitFunction::NuisanceValues nuisances;
+   for (std::size_t i = 0; i < shapeSystematicNames.size(); ++i)
+   {
+      // need to read the proxy in case of clone or imported pdfs can use redir'd nusiances
+      // better way to do?
+      const double delta = static_cast<const RooAbsReal*>(shape_Systematics.at(static_cast<int>(i)))->getVal();
+      if (!std::isfinite(delta))
+         throw std::invalid_argument("Shape-systematic deltas must be finite");
+      nuisances.emplace(shapeSystematicNames[i], delta);
+   }
+   return model().evaluate(x.arg().getVal(), realHiggsMass.arg().getVal(), nuisances);
 }
 
 
-RooFormulaVar FitFunctionPDF::signal_norm(std::string channel_name)
+RooFormulaVar FitFunctionPDF::signal_norm(std::string channel_name) const
 {
-   std::string normExpression = "@1 * (" + function.getNormExpression("@0") + ")";
+   std::string normExpression = "@1 * (" + model().getNormExpression("@0") + ")";
    std::string normName = channel_name + "_norm";
 
    return RooFormulaVar(normName.c_str(), normName.c_str(), normExpression.c_str(),
                         RooArgList(*realHiggsMass.absArg(), *norm_Systematic.absArg()));
 }
 
-
-
-
-
-
-
+const FitFunction &FitFunctionPDF::model() const
+{
+   if (isParameterized)
+      return parameterizedFunction;
+   return simpleFunction;
+}
 

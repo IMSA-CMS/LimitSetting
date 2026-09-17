@@ -10,6 +10,9 @@ grep -Fxq '#include "HiggsAnalysis/CombinedLimit/interface/FitFunctionPDF.h"' ..
 grep -Fq '<class name="FitFunctionPDF"' ../src/classes_def.xml ||
   sed -i '\#</lcgdict>#i\  <class name="FitFunctionPDF" />' ../src/classes_def.xml #insert before </lcgdict>
 
+grep -Eq '<use[[:space:]]+name="CMSAnalysis/Analysis"' ../BuildFile.xml ||
+  sed -i '1i<use name="CMSAnalysis/Analysis"/>' ../BuildFile.xml
+
 if [[ "${1:-}" == "--build" ]]; then
   cd ..
   scram b -j
