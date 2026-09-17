@@ -30,9 +30,6 @@
 #include "RooRealConstant.h"
 #include "RooConstVar.h"
 #include "RooClassFactory.h"
-#include "RooPDF_HiggsAnalysis_Base.h"
-#include "RooPDF_HiggsAnalysis_DSCB.h"
-#include "RooPDF_HiggsAnalysis_BKG.h"
 #include "RooArgList.h"
 #include "RooGenericPdf.h"
 
@@ -41,7 +38,12 @@
 #include "CMSAnalysis/Analysis/interface/FitFunction.hh"
 #include "CMSAnalysis/Analysis/interface/FitFunctionCollection.hh"
 
-
+struct Process
+{
+	FitFunction function;
+	RooAbsPdf* pdf = nullptr;
+	RooAbsReal* norm = nullptr;
+};
 
 struct Channel
 {
@@ -53,7 +55,6 @@ struct Channel
 
 };
 
-void construct_models_Higgs_5();
 
 std::vector<double> split(const std::string& line);
 std::string replaceAll(std::string unmodifiedString, const std::string from, const std::string to);
