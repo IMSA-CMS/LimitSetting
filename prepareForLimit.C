@@ -9,6 +9,7 @@
 #include <typeinfo>
 #include <map>
 #include <memory>
+#include <set>
 #include <stdexcept>
 
 #include "TFile.h"
@@ -59,43 +60,6 @@ std::string replaceAll(std::string unmodifiedString, const std::string from, con
 
 
 
-
-std::unique_ptr<FitFunction> makeSignalModel(FitFunctionCollection &collection,
-                                           const std::string &channel, double min, double max)
-{
-    if (collection.size() == 0)
-        throw std::runtime_error("No signal functions for " + channel);
-    const auto &candidate = collection.getFunctionsMap().begin()->second;
-    if (candidate.getParameter("ParameterIndex").empty())
-    {
-        if (collection.size() != 1)
-            throw std::runtime_error("wanted one signal model for " + channel);
-        return std::make_unique<SimpleFitFunction>(candidate);
-    }
-
-    std::vector<SimpleFitFunction> functions;
-    for (size_t i = 0; i < collection.size(); ++i)
-    {
-        auto row = collection.getFunctions("ParameterIndex", std::to_string(i));
-        if (row.size() != 1)
-            throw std::runtime_error("bad signal parameter group for " + channel);
-        functions.push_back(row.getFunctionsMap().begin()->second);
-    }
-    const auto &first = functions.front();
-    const auto type = static_cast<FitFunction::FunctionType>(std::stoi(first.getParameter("OriginalFunctionType")));
-    const auto shape = SimpleFitFunction::createFunctionOfType(type, "", "", min, max);
-    if (functions.size() != static_cast<size_t>(shape.getFunction()->GetNpar()))
-        throw std::runtime_error("bad/  or multiple signal parameter groups for " + channel);
-    if (collection.findUniqueNames("GenSim").size() != 1 ||
-        collection.findUniqueNames("OriginalFunctionType").size() != 1)
-        throw std::runtime_error("bad signal parameter group for " + channel);
-    auto model = std::make_unique<FitFunctionParameterization>(first.getName(), channel, type, "", min, max);
-    for (const auto &function : functions)
-    {
-        model->insert(function);
-    }
-    return model;
-}
 
 void makeCombinedDatacard(std::string filename, std::vector<Channel> channels)
 {
@@ -272,13 +236,23 @@ void prepareForLimit()
 	std::vector<std::string> channelsToCheck = {"eeee", "uuuu"};
 
 	// Get signal and background parameters from files - Note: Update file paths later
-	std::string signalParamsFileName = "/uscms/home/kprasad/cmsReleaseArea/CMSSW_15_0_4/src/CMSAnalysis/Analysis/bin/fitting/H++SignalParameterFunctions.txt";
-	std::string backgroundParamsFileName = "/uscms/home/hchen2/analysis/CMSSW_15_0_4/src/CMSAnalysis/Analysis/bin/fitting/H++BackgroundFunctions930.txt";
+	std::string signalParamsFileName = "/uscms/home/ssahoo1/heze/fits/9_23_26/imsa/H++SignalParameterFunctions.txt";
+	std::string backgroundParamsFileName = "/uscms/home/ssahoo1/heze/fits/9_23_26/imsa/H++BackgroundFunctions.txt";
+	const std::map<std::string, std::string> backgroundProcessNames = {
+		{"Drell-Yan Background", "DY"},
+		{"ZZ Background", "ZZ"},
+		{"t#bar{t}, Multiboson Background", "ttbarMultiboson"}
+	};
 
-	FitFunctionCollection signalCollection = FitFunctionCollection::loadFunctions(signalParamsFileName);
+	std::vector<FitFunctionParameterization> signalModels = FitFunctionParameterization::loadFunctions(signalParamsFileName);
 	FitFunctionCollection backgroundCollection = FitFunctionCollection::loadFunctions(backgroundParamsFileName);
 
-	std::set<std::string> channelNames = signalCollection.findUniqueNames("Channel");
+	std::set<std::string> channelNames;
+	//takes first from different gensims, eventually we will need to do something with them
+	for (const auto& signalModel : signalModels)
+	{
+		channelNames.insert(FitFunction::decodeName(signalModel.getName()).at("Channel"));
+	}
 
 	std::vector<Channel> channels;
 	for (const auto& channelName : channelNames)
@@ -295,10 +269,14 @@ void prepareForLimit()
 			const std::string fullChannelName = channel.name + "_" + X_or_Y;
 			std::cout << "Processing " << fullChannelName << "\n";
 
-			// read channel 
-			auto signalFunctions = signalCollection.getFunctions("Channel", channel.name).getFunctions(X_or_Y + " Projection");
-			const auto signalModel = makeSignalModel(signalFunctions, channel.name, mass.getMin(), mass.getMax());
-			auto backgroundFunctions = backgroundCollection.getFunctions("channel", channel.name).getFunctions(X_or_Y + " Projection").getFunctionsMap();
+			// Use the first generated signal model for this channel and projection.
+			const auto signalModel = std::find_if(signalModels.begin(), signalModels.end(), [&](const auto& candidate) {
+				const auto metadata = FitFunction::decodeName(candidate.getName());
+				return metadata.at("Channel") == channel.name && metadata.at("Projection") == X_or_Y;
+			});
+			if (signalModel == signalModels.end())
+				throw std::runtime_error("No signal functions for " + fullChannelName);
+			auto backgroundFunctions = backgroundCollection.getFunctions("Channel", channel.name).getFunctions("Projection", X_or_Y).getFunctionsMap();
 
 			const auto shapeNames = signalModel->listSystematics();
 			RooArgList shapeDeltas;
@@ -335,10 +313,15 @@ void prepareForLimit()
 
 			for (auto& [key, backgroundFunction] : backgroundFunctions)
 			{
+				const auto process = FitFunction::decodeName(backgroundFunction.getName()).at("Process");
+				const auto shortName = backgroundProcessNames.find(process);
+				if (shortName == backgroundProcessNames.end())
+					throw std::runtime_error("No short name for background process " + process);
+				const std::string pdfName = channel.name + "_" + shortName->second + "_" + X_or_Y;
 
 			// std::vector<std::vector<double>> bkg_types_params = backgroundChannel.extractParameters();
 			auto* bkg_pdf = new FitFunctionPDF(
-				(channel.name + "_bkg_" + X_or_Y).c_str(), (channel.name + "_bkg").c_str(), mass, realHiggsMass, Bee, Beu, norm_Systematic, shape_Systematic, backgroundFunction); //search for the right bkg fitfunction, should be in this file, use my searching function to find which one??
+				pdfName.c_str(), pdfName.c_str(), mass, realHiggsMass, Bee, Beu, norm_Systematic, shape_Systematic, backgroundFunction);
 					
 				RooRealVar bkg_norm((std::string(bkg_pdf->GetName()) + "_norm").c_str(), (std::string(bkg_pdf->GetName()) + "_norm").c_str(),
 					std::stod(backgroundFunction.getNormExpression("")));
