@@ -63,7 +63,7 @@ protected:
 
  
 private:
-  std::shared_ptr<FitFunction> function; // note that we have the custom impl for this since shr ptr io doesnt work
+  std::shared_ptr<FitFunction> function; //! note that we have the custom impl for this since shr ptr io doesnt work
   std::vector<std::string> shapeSystematicNames;
 
   ClassDefOverride(FitFunctionPDF, 4)
