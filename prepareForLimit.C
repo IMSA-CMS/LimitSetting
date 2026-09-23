@@ -234,8 +234,8 @@ void prepareForLimit()
 	std::vector<std::string> channelsToCheck = {"eeee", "uuuu"};
 
 	// Get signal and background parameters from files - Note: Update file paths later
-	std::string signalParamsFileName = "/uscms/home/kprasad/cmsReleaseArea/CMSSW_15_0_4/src/CMSAnalysis/Analysis/bin/fitting/H++SignalParameterFunctions.txt";
-	std::string backgroundParamsFileName = "/uscms/home/hchen2/analysis/CMSSW_15_0_4/src/CMSAnalysis/Analysis/bin/fitting/H++BackgroundFunctions930.txt";
+	std::string signalParamsFileName = "/uscms/home/pdong/work/analysis/CMSSW_16_0_0/src/CMSAnalysis/Analysis/bin/fitting/H++SignalParameterFunctions.txt";
+	std::string backgroundParamsFileName = "/uscms/home/pdong/work/analysis/CMSSW_16_0_0/src/CMSAnalysis/Analysis/bin/fitting/H++BackgroundFunctions.txt";
 
 	FitFunctionCollection signalCollection = FitFunctionCollection::loadFunctions(signalParamsFileName);
 	FitFunctionCollection backgroundCollection = FitFunctionCollection::loadFunctions(backgroundParamsFileName);
