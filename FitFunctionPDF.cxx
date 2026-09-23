@@ -5,24 +5,15 @@
  *****************************************************************************/
 
 
-// Your description goes here...
-
-
 #include "../interface/FitFunctionPDF.h"
-
-
-// #include <RooAbsReal.h>
-// #include <RooAbsCategory.h>
-
-
-// #include <Riostream.h>
-// #include <TMath.h>
-
+#include "TBufferFile.h"
+#include "TClass.h"
 
 #include <algorithm>
 #include <cmath>
 #include <set>
 #include <stdexcept>
+#include <utility>
 
 
 ClassImp(FitFunctionPDF);
@@ -35,29 +26,18 @@ FitFunctionPDF::FitFunctionPDF(const char *name, const char *title,
                         RooAbsReal& _branch_ratio_2,
                         RooAbsReal& _norm_Systematic,
                         RooAbsReal& _shape_Systematic,
-                        const FitFunction &model)
+                        std::shared_ptr<FitFunction> model)
    : RooAbsPdf(name,title),
    x("x","x",this,_x),
    realHiggsMass("realHiggsMass","realHiggsMass",this,_realHiggsMass),
    branch_ratio_1("branch_ratio_1","branch_ratio_1",this,_branch_ratio_1),
    branch_ratio_2("branch_ratio_2","branch_ratio_2",this,_branch_ratio_2),
    norm_Systematic("norm_Systematic","norm_Systematic",this,_norm_Systematic),
-   shape_Systematic("shape_Systematic","shape_Systematic",this,_shape_Systematic)
+   shape_Systematic("shape_Systematic","shape_Systematic",this,_shape_Systematic),
+   function(std::move(model))
 {
-   // assign simple/parameterized
-   if (const auto *simple = dynamic_cast<const SimpleFitFunction*>(&model))
-   {
-      simpleFunction = *simple;
-   }
-   else if (const auto *parameterized = dynamic_cast<const FitFunctionParameterization*>(&model))
-   {
-      parameterizedFunction = *parameterized;
-      isParameterized = true;
-   }
-   else
-   {
-      throw std::invalid_argument("FitFunctionPDF received an unsupported FitFunction implementation");
-   }
+   if (!function)
+      throw std::invalid_argument("FitFunctionPDF requires a model");
 }
 
 
@@ -65,18 +45,18 @@ FitFunctionPDF::FitFunctionPDF(const char *name, const char *title,
                         RooAbsReal& _x, RooAbsReal& _realHiggsMass,
                         RooAbsReal& _branch_ratio_1, RooAbsReal& _branch_ratio_2,
                         RooAbsReal& _norm_Systematic, RooAbsReal& _shape_Systematic,
-                        const FitFunction &model,
+                        std::shared_ptr<FitFunction> model,
                         const std::vector<std::string>& systematicNames,
                         const RooArgList& deltas)
    : FitFunctionPDF(name, title, _x, _realHiggsMass, _branch_ratio_1,
-                    _branch_ratio_2, _norm_Systematic, _shape_Systematic, model)
+                    _branch_ratio_2, _norm_Systematic, _shape_Systematic, std::move(model))
 {
    // need to check
    if (systematicNames.size() != static_cast<std::size_t>(deltas.getSize()))
       throw std::invalid_argument("Systematic names must match the delta list");
 
    std::set<std::string> seen;
-   const auto availableSystematics = this->model().listSystematics();
+   const auto availableSystematics = function->listSystematics();
    for (std::size_t i = 0; i < systematicNames.size(); ++i)
    {
       // add sys names/dels in right manner
@@ -103,9 +83,7 @@ FitFunctionPDF::FitFunctionPDF(FitFunctionPDF const &other, const char *name)
    norm_Systematic("norm_Systematic",this,other.norm_Systematic),
    shape_Systematic("shape_Systematic",this,other.shape_Systematic),
    shape_Systematics("shape_Systematics",this,other.shape_Systematics),
-   simpleFunction(other.simpleFunction),
-   parameterizedFunction(other.parameterizedFunction),
-   isParameterized(other.isParameterized),
+   function(other.function),
    shapeSystematicNames(other.shapeSystematicNames)
 {
 }
@@ -127,23 +105,50 @@ double FitFunctionPDF::evaluate() const
          throw std::invalid_argument("Shape-systematic deltas must be finite");
       nuisances.emplace(shapeSystematicNames[i], delta);
    }
-   return model().evaluate(x.arg().getVal(), realHiggsMass.arg().getVal(), nuisances);
+   return function->evaluate(x.arg().getVal(), realHiggsMass.arg().getVal(), nuisances);
 }
 
 
 RooFormulaVar FitFunctionPDF::signal_norm(std::string channel_name) const
 {
-   std::string normExpression = "@1 * (" + model().getNormExpression("@0") + ")";
+   std::string normExpression = "@1 * (" + function->getNormExpression("@0") + ")";
    std::string normName = channel_name + "_norm";
 
    return RooFormulaVar(normName.c_str(), normName.c_str(), normExpression.c_str(),
                         RooArgList(*realHiggsMass.absArg(), *norm_Systematic.absArg()));
 }
 
-const FitFunction &FitFunctionPDF::model() const
+// we have to do this custom because root doesnt support shr ptr io
+// see https://root.cern.ch/manual/io_custom_classes/#restrictions-on-types-root-io-can-handle
+void FitFunctionPDF::Streamer(TBuffer &buffer)
 {
-   if (isParameterized)
-      return parameterizedFunction;
-   return simpleFunction;
-}
+   const auto *modelClass = TClass::GetClass(typeid(FitFunction));
+   if (buffer.IsReading())
+   {
+      UInt_t start, count;
+      const auto version = buffer.ReadVersion(&start, &count);
+      if (version < 4)
+         throw std::runtime_error("You're working with the older version, plz move to the new one with the shared model fitfunctionpdf for this to work");
+      buffer.ReadClassBuffer(FitFunctionPDF::Class(), this, version, start, count);
+      std::string data;
+      buffer.ReadStdString(&data);
+      TBufferFile modelBuffer(TBuffer::kRead, data.size(), data.data(), false);
+      function.reset(static_cast<FitFunction*>(modelBuffer.ReadObjectAny(modelClass)));
+      if (!function)
+         throw std::runtime_error("Can't read the FitFunctionPDF model");
+   }
+   else
+   {
+      if (!function)
+         throw std::runtime_error("Can't write a FitFunctionPDF without a model");
+      buffer.WriteClassBuffer(FitFunctionPDF::Class(), this);
+      // the best way to do this appears to be having both PDF pass an 
+      // their own status of the model
+      // we can avoid two shr_ptr blocks having the same root object with a seperate buffer
 
+      TBufferFile modelBuffer(TBuffer::kWrite);
+      modelBuffer.WriteObjectAny(function.get(), modelClass);
+      const std::string data(modelBuffer.Buffer(), modelBuffer.Length());
+      buffer.WriteStdString(&data);
+   }
+}

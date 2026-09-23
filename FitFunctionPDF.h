@@ -13,15 +13,11 @@
 #include "RooRealProxy.h"
 #include "RooArgList.h"
 #include "RooListProxy.h"
-#include "RooCategoryProxy.h"
 #include "RooAbsReal.h"
-#include "RooAbsCategory.h"
 #include "CMSAnalysis/Analysis/interface/FitFunction.hh"
-#include "CMSAnalysis/Analysis/interface/FitFunctionParameterization.hh"
-#include "CMSAnalysis/Analysis/interface/SimpleFitFunction.hh"
 
 
-#include <complex>
+#include <memory>
 #include <string>
 #include <vector>
 #include "RooFormulaVar.h"
@@ -37,15 +33,14 @@ public:
         RooAbsReal& _branch_ratio_2,
         RooAbsReal& _norm_Systematic,
         RooAbsReal& _shape_Systematic,
-        const FitFunction &function);
-   // New
+        std::shared_ptr<FitFunction> function);
    FitFunctionPDF(const char *name, const char *title, RooAbsReal& _x,
         RooAbsReal& _realHiggsMass,
         RooAbsReal& _branch_ratio_1,
         RooAbsReal& _branch_ratio_2,
         RooAbsReal& _norm_Systematic,
         RooAbsReal& _shape_Systematic,
-        const FitFunction &function,
+        std::shared_ptr<FitFunction> function,
         const std::vector<std::string>& systematicNames,
         const RooArgList& deltas);
   FitFunctionPDF(FitFunctionPDF const &other, const char *name=nullptr);
@@ -68,15 +63,10 @@ protected:
 
  
 private:
-//easier assign
-  const FitFunction &model() const;
-
-  SimpleFitFunction simpleFunction;
-  FitFunctionParameterization parameterizedFunction;
-  bool isParameterized = false;
+  std::shared_ptr<FitFunction> function; // note that we have the custom impl for this since shr ptr io doesnt work
   std::vector<std::string> shapeSystematicNames;
 
-  ClassDefOverride(FitFunctionPDF, 3)
+  ClassDefOverride(FitFunctionPDF, 4)
 };
 
 

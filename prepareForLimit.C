@@ -40,7 +40,6 @@
 #include "FitFunctionPDF.h"
 #include "CMSAnalysis/Analysis/interface/FitFunction.hh"
 #include "CMSAnalysis/Analysis/interface/FitFunctionCollection.hh"
-#include "CMSAnalysis/Analysis/interface/FitFunctionParameterization.hh"
 
 
 
@@ -59,43 +58,6 @@ std::string replaceAll(std::string unmodifiedString, const std::string from, con
 
 
 
-
-std::unique_ptr<FitFunction> makeSignalModel(FitFunctionCollection &collection,
-                                           const std::string &channel, double min, double max)
-{
-    if (collection.size() == 0)
-        throw std::runtime_error("No signal functions for " + channel);
-    const auto &candidate = collection.getFunctionsMap().begin()->second;
-    if (candidate.getParameter("ParameterIndex").empty())
-    {
-        if (collection.size() != 1)
-            throw std::runtime_error("wanted one signal model for " + channel);
-        return std::make_unique<SimpleFitFunction>(candidate);
-    }
-
-    std::vector<SimpleFitFunction> functions;
-    for (size_t i = 0; i < collection.size(); ++i)
-    {
-        auto row = collection.getFunctions("ParameterIndex", std::to_string(i));
-        if (row.size() != 1)
-            throw std::runtime_error("bad signal parameter group for " + channel);
-        functions.push_back(row.getFunctionsMap().begin()->second);
-    }
-    const auto &first = functions.front();
-    const auto type = static_cast<FitFunction::FunctionType>(std::stoi(first.getParameter("OriginalFunctionType")));
-    const auto shape = SimpleFitFunction::createFunctionOfType(type, "", "", min, max);
-    if (functions.size() != static_cast<size_t>(shape.getFunction()->GetNpar()))
-        throw std::runtime_error("bad/  or multiple signal parameter groups for " + channel);
-    if (collection.findUniqueNames("GenSim").size() != 1 ||
-        collection.findUniqueNames("OriginalFunctionType").size() != 1)
-        throw std::runtime_error("bad signal parameter group for " + channel);
-    auto model = std::make_unique<FitFunctionParameterization>(first.getName(), channel, type, "", min, max);
-    for (const auto &function : functions)
-    {
-        model->insert(function);
-    }
-    return model;
-}
 
 void makeCombinedDatacard(std::string filename, std::vector<Channel> channels)
 {
@@ -297,7 +259,7 @@ void prepareForLimit()
 
 			// read channel 
 			auto signalFunctions = signalCollection.getFunctions("Channel", channel.name).getFunctions(X_or_Y + " Projection");
-			const auto signalModel = makeSignalModel(signalFunctions, channel.name, mass.getMin(), mass.getMax());
+			const auto signalModel = signalFunctions.getModel(channel.name, mass.getMin(), mass.getMax());
 			auto backgroundFunctions = backgroundCollection.getFunctions("channel", channel.name).getFunctions(X_or_Y + " Projection").getFunctionsMap();
 
 			const auto shapeNames = signalModel->listSystematics();
@@ -323,7 +285,7 @@ void prepareForLimit()
 			auto signal_pdf = std::make_unique<FitFunctionPDF>(
 				(channel.name + "_signal_" + X_or_Y).c_str(), (channel.name + "_signal").c_str(),
 				mass, realHiggsMass, Bee, Beu, norm_Systematic, shape_Systematic,
-				*signalModel, shapeNames, shapeDeltas);
+				signalModel, shapeNames, shapeDeltas);
 
 			auto signal_norm = signal_pdf->signal_norm(signal_pdf->GetName());
 
@@ -341,7 +303,7 @@ void prepareForLimit()
 				(channel.name + "_bkg_" + X_or_Y).c_str(), (channel.name + "_bkg").c_str(), mass, realHiggsMass, Bee, Beu, norm_Systematic, shape_Systematic, backgroundFunction); //search for the right bkg fitfunction, should be in this file, use my searching function to find which one??
 					
 				RooRealVar bkg_norm((std::string(bkg_pdf->GetName()) + "_norm").c_str(), (std::string(bkg_pdf->GetName()) + "_norm").c_str(),
-					std::stod(backgroundFunction.getNormExpression("")));
+					std::stod(backgroundFunction->getNormExpression("")));
 				bkg_norm.setConstant(true);
 
 				// Import background
