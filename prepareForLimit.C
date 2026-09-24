@@ -44,7 +44,7 @@
 
 struct Process
 {
-	FitFunction function;
+	std::shared_ptr<FitFunction> function;
 	RooAbsPdf* pdf = nullptr;
 	RooAbsReal* norm = nullptr;
 };
