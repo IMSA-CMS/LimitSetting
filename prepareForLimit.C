@@ -276,9 +276,10 @@ void prepareForLimit()
 			});
 			if (signalModel == signalModels.end())
 				throw std::runtime_error("No signal functions for " + fullChannelName);
+			const auto model = std::make_shared<FitFunctionParameterization>(*signalModel);
 			auto backgroundFunctions = backgroundCollection.getFunctions("Channel", channel.name).getFunctions("Projection", X_or_Y).getFunctionsMap();
 
-			const auto shapeNames = signalModel->listSystematics();
+			const auto shapeNames = model->listSystematics();
 			RooArgList shapeDeltas;
 			for (const auto& name : shapeNames)
 			{
@@ -301,7 +302,7 @@ void prepareForLimit()
 			auto signal_pdf = std::make_unique<FitFunctionPDF>(
 				(channel.name + "_signal_" + X_or_Y).c_str(), (channel.name + "_signal").c_str(),
 				mass, realHiggsMass, Bee, Beu, norm_Systematic, shape_Systematic,
-				*signalModel, shapeNames, shapeDeltas);
+				model, shapeNames, shapeDeltas);
 
 			auto signal_norm = signal_pdf->signal_norm(signal_pdf->GetName());
 
@@ -313,7 +314,7 @@ void prepareForLimit()
 
 			for (auto& [key, backgroundFunction] : backgroundFunctions)
 			{
-				const auto process = FitFunction::decodeName(backgroundFunction.getName()).at("Process");
+				const auto process = FitFunction::decodeName(backgroundFunction->getName()).at("Process");
 				const auto shortName = backgroundProcessNames.find(process);
 				if (shortName == backgroundProcessNames.end())
 					throw std::runtime_error("No short name for background process " + process);
@@ -324,7 +325,7 @@ void prepareForLimit()
 				pdfName.c_str(), pdfName.c_str(), mass, realHiggsMass, Bee, Beu, norm_Systematic, shape_Systematic, backgroundFunction);
 					
 				RooRealVar bkg_norm((std::string(bkg_pdf->GetName()) + "_norm").c_str(), (std::string(bkg_pdf->GetName()) + "_norm").c_str(),
-					std::stod(backgroundFunction.getNormExpression("")));
+					std::stod(backgroundFunction->getNormExpression("")));
 				bkg_norm.setConstant(true);
 
 				// Import background
