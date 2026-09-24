@@ -142,7 +142,7 @@ void FitFunctionPDF::Streamer(TBuffer &buffer)
       if (!function)
          throw std::runtime_error("Can't write a FitFunctionPDF without a model");
       buffer.WriteClassBuffer(FitFunctionPDF::Class(), this);
-      // the best way to do this appears to be having both PDF pass an 
+      // the best way to do this appears to be having both PDF pass an
       // their own status of the model
       // we can avoid two shr_ptr blocks having the same root object with a seperate buffer
 

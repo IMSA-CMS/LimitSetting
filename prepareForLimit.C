@@ -9,6 +9,7 @@
 #include <typeinfo>
 #include <map>
 #include <memory>
+#include <set>
 #include <stdexcept>
 
 #include "TFile.h"
@@ -40,6 +41,7 @@
 #include "FitFunctionPDF.h"
 #include "CMSAnalysis/Analysis/interface/FitFunction.hh"
 #include "CMSAnalysis/Analysis/interface/FitFunctionCollection.hh"
+#include "CMSAnalysis/Analysis/interface/FitFunctionParameterization.hh"
 
 
 
@@ -234,13 +236,23 @@ void prepareForLimit()
 	std::vector<std::string> channelsToCheck = {"eeee", "uuuu"};
 
 	// Get signal and background parameters from files - Note: Update file paths later
-	std::string signalParamsFileName = "/uscms/home/pdong/work/analysis/CMSSW_16_0_0/src/CMSAnalysis/Analysis/bin/fitting/H++SignalParameterFunctions.txt";
-	std::string backgroundParamsFileName = "/uscms/home/pdong/work/analysis/CMSSW_16_0_0/src/CMSAnalysis/Analysis/bin/fitting/H++BackgroundFunctions.txt";
+	std::string signalParamsFileName = "/uscms/home/ssahoo1/heze/fits/9_23_26/imsa/H++SignalParameterFunctions.txt";
+	std::string backgroundParamsFileName = "/uscms/home/ssahoo1/heze/fits/9_23_26/imsa/H++BackgroundFunctions.txt";
+	const std::map<std::string, std::string> backgroundProcessNames = {
+		{"Drell-Yan Background", "DY"},
+		{"ZZ Background", "ZZ"},
+		{"t#bar{t}, Multiboson Background", "ttbarMultiboson"}
+	};
 
-	FitFunctionCollection signalCollection = FitFunctionCollection::loadFunctions(signalParamsFileName);
+	std::vector<FitFunctionParameterization> signalModels = FitFunctionParameterization::loadFunctions(signalParamsFileName);
 	FitFunctionCollection backgroundCollection = FitFunctionCollection::loadFunctions(backgroundParamsFileName);
 
-	std::set<std::string> channelNames = signalCollection.findUniqueNames("Channel");
+	std::set<std::string> channelNames;
+	//takes first from different gensims, eventually we will need to do something with them
+	for (const auto& signalModel : signalModels)
+	{
+		channelNames.insert(FitFunction::decodeName(signalModel.getName()).at("Channel"));
+	}
 
 	std::vector<Channel> channels;
 	for (const auto& channelName : channelNames)
@@ -258,12 +270,17 @@ void prepareForLimit()
 			const std::string fullChannelName = channel.name + "_" + X_or_Y;
 			std::cout << "Processing " << fullChannelName << "\n";
 
-			// read channel 
-			auto signalFunctions = signalCollection.getFunctions("Channel", channel.name).getFunctions(X_or_Y + " Projection");
-			const auto signalModel = signalFunctions.getModel(channel.name, mass.getMin(), mass.getMax());
-			auto backgroundFunctions = backgroundCollection.getFunctions("channel", channel.name).getFunctions(X_or_Y + " Projection").getFunctionsMap();
+			// Use the first generated signal model for this channel and projection.
+			const auto signalModel = std::find_if(signalModels.begin(), signalModels.end(), [&](const auto& candidate) {
+				const auto metadata = FitFunction::decodeName(candidate.getName());
+				return metadata.at("Channel") == channel.name && metadata.at("Projection") == X_or_Y;
+			});
+			if (signalModel == signalModels.end())
+				throw std::runtime_error("No signal functions for " + fullChannelName);
+			const auto model = std::make_shared<FitFunctionParameterization>(*signalModel);
+			auto backgroundFunctions = backgroundCollection.getFunctions("Channel", channel.name).getFunctions("Projection", X_or_Y).getFunctionsMap();
 
-			const auto shapeNames = signalModel->listSystematics();
+			const auto shapeNames = model->listSystematics();
 			RooArgList shapeDeltas;
 			for (const auto& name : shapeNames)
 			{
@@ -286,7 +303,7 @@ void prepareForLimit()
 			auto signal_pdf = std::make_unique<FitFunctionPDF>(
 				(channel.name + "_signal_" + X_or_Y).c_str(), (channel.name + "_signal").c_str(),
 				mass, realHiggsMass, Bee, Beu, norm_Systematic, shape_Systematic,
-				signalModel, shapeNames, shapeDeltas);
+				model, shapeNames, shapeDeltas);
 
 			auto signal_norm = signal_pdf->signal_norm(signal_pdf->GetName());
 
@@ -298,10 +315,15 @@ void prepareForLimit()
 
 			for (auto& [key, backgroundFunction] : backgroundFunctions)
 			{
+				const auto process = FitFunction::decodeName(backgroundFunction->getName()).at("Process");
+				const auto shortName = backgroundProcessNames.find(process);
+				if (shortName == backgroundProcessNames.end())
+					throw std::runtime_error("No short name for background process " + process);
+				const std::string pdfName = channel.name + "_" + shortName->second + "_" + X_or_Y;
 
 			// std::vector<std::vector<double>> bkg_types_params = backgroundChannel.extractParameters();
 			auto* bkg_pdf = new FitFunctionPDF(
-				(channel.name + "_bkg_" + X_or_Y).c_str(), (channel.name + "_bkg").c_str(), mass, realHiggsMass, Bee, Beu, norm_Systematic, shape_Systematic, backgroundFunction); //search for the right bkg fitfunction, should be in this file, use my searching function to find which one??
+				pdfName.c_str(), pdfName.c_str(), mass, realHiggsMass, Bee, Beu, norm_Systematic, shape_Systematic, backgroundFunction);
 					
 				RooRealVar bkg_norm((std::string(bkg_pdf->GetName()) + "_norm").c_str(), (std::string(bkg_pdf->GetName()) + "_norm").c_str(),
 					std::stod(backgroundFunction->getNormExpression("")));
