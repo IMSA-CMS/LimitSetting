@@ -36,6 +36,7 @@
 #include "RooClassFactory.h"
 #include "RooArgList.h"
 #include "RooGenericPdf.h"
+#include "RooNumIntConfig.h"
 
 
 #include "FitFunctionPDF.h"
@@ -72,7 +73,7 @@ void makeCombinedDatacard(std::string filename, std::vector<Channel> channels)
     int nBins = channels.size() * variants.size();
     // header
     out << "imax " << nBins << "\n";
-    out << "jmax " << (2 * nBins - 1) << "\n";
+    out << "jmax " << (3 * nBins - 1) << "\n";
     out << "kmax *\n";
     out << "---------------------------------------------\n";
     // shapes block
@@ -83,8 +84,10 @@ void makeCombinedDatacard(std::string filename, std::vector<Channel> channels)
             std::string bin = "ch" + std::to_string(i+1) + "_ch" + std::to_string(j+1);
             out << "shapes " << ch << "_" << var << "  " << bin
                 << "  higgsworkspace.root  higgsworkspace:" << ch << "_signal_" << var << "\n";
-            out << "shapes bkg_" << ch << "_" << var << "  " << bin
-                << "  higgsworkspace.root  higgsworkspace:" << ch << "_bkg_" << var << "\n";
+            out << "shapes ZZ_" << ch << "_" << var << "  " << bin
+                << "  higgsworkspace.root  higgsworkspace:" << ch << "_ZZ_" << var << "\n";
+            out << "shapes ttbarMultiboson_" << ch << "_" << var << "  " << bin
+                << "  higgsworkspace.root  higgsworkspace:" << ch << "_ttbarMultiboson_" << var << "\n";
             out << "shapes data_obs  " << bin
                 << "  higgsworkspace.root  higgsworkspace:Events900_" << var << "\n";
         }
@@ -103,17 +106,18 @@ void makeCombinedDatacard(std::string filename, std::vector<Channel> channels)
     for (size_t i = 0; i < channels.size(); i++)
         for (size_t j = 0; j < variants.size(); j++) {
             std::string bin = "ch" + std::to_string(i+1) + "_ch" + std::to_string(j+1);
-            out << bin << "  " << bin << "  ";
+            out << bin << "  " << bin << "  " << bin << "  ";
         }
     out << "\nprocess  ";
     for (auto& ch : channels)
         for (auto& var : variants)
-            out << ch.name << "_" << var << "  bkg_" << ch.name << "_" << var << "  ";
+            out << ch.name << "_" << var << "  ZZ_" << ch.name << "_" << var
+                << "  ttbarMultiboson_" << ch.name << "_" << var << "  ";
     out << "\nprocess  ";
     for (int i = 0; i < nBins; i++)
-        out << "0  1  ";
+        out << "0  1  2  ";
     out << "\nrate  ";
-    for (int i = 0; i < 2 * nBins; i++) out << "1  ";
+    for (int i = 0; i < 3 * nBins; i++) out << "1  ";
     out << "\n---------------------------------------------\n";
 }
 
@@ -172,6 +176,10 @@ std::string replaceAll(std::string unmodifiedString, const std::string from, con
 void prepareForLimit()
 {
 	gROOT->SetBatch(true); // I can't remember what this does exactly, but it needs to be here
+	// need to keep the normalization derivatives accurate cause raw signal has v small yield
+	RooNumIntConfig signalIntegration(*RooAbsReal::defaultIntegratorConfig());
+	signalIntegration.setEpsAbs(1e-12);
+	signalIntegration.setEpsRel(1e-12);
 
 	// Get the Signal Events from Monte Carlo
 	// We will be fitting our model to these events
@@ -307,6 +315,7 @@ void prepareForLimit()
 				(channel.name + "_signal_" + X_or_Y).c_str(), (channel.name + "_signal").c_str(),
 				mass, realHiggsMass, Bee, Beu, norm_Systematic, shape_Systematic,
 				model, shapeNames, shapeDeltas);
+			signal_pdf->setIntegratorConfig(signalIntegration);
 
 			auto signal_norm = signal_pdf->signal_norm(signal_pdf->GetName());
 
@@ -323,6 +332,7 @@ void prepareForLimit()
 				if (shortName == backgroundProcessNames.end())
 					throw std::runtime_error("No short name for background process " + process);
 				const std::string pdfName = channel.name + "_" + shortName->second + "_" + X_or_Y;
+
 
 			// std::vector<std::vector<double>> bkg_types_params = backgroundChannel.extractParameters();
 			auto* bkg_pdf = new FitFunctionPDF(
@@ -341,6 +351,8 @@ void prepareForLimit()
 			}
 		}
 	}
+
+	makeCombinedDatacard ("datacard",channels);
 
 	w_sig.Print("v");
 	std::cout << "\n";
