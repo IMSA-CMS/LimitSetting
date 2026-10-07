@@ -240,8 +240,8 @@ void prepareForLimit()
 	std::vector<std::string> channelsToCheck = {"eeee", "uuuu"};
 
 	// Get signal and background parameters from files - Note: Update file paths later
-	std::string signalParamsFileName = "/uscms/home/ssahoo1/heze/fits/9_23_26/imsa/H++SignalParameterFunctions.txt";
-	std::string backgroundParamsFileName = "/uscms/home/ssahoo1/heze/fits/9_23_26/imsa/H++BackgroundFunctions.txt";
+	std::string signalParamsFileName = "/uscms/home/ssahoo1/heze/fits/9_28_26/kansas/H++SignalParameterFunctions.txt";
+	std::string backgroundParamsFileName = "/uscms/home/ssahoo1/heze/fits/9_28_26/kansas/H++BackgroundFunctions.txt";
 	const std::map<std::string, std::string> backgroundProcessNames = {
 		{"Drell-Yan Background", "DY"},
 		{"ZZ Background", "ZZ"},
@@ -330,6 +330,7 @@ void prepareForLimit()
 					
 				RooRealVar bkg_norm((std::string(bkg_pdf->GetName()) + "_norm").c_str(), (std::string(bkg_pdf->GetName()) + "_norm").c_str(),
 					std::stod(backgroundFunction->getNormExpression("")));
+				std::cout << "Setting background normalization for " << bkg_pdf->GetName() << " to " << bkg_norm.getVal() << "\n";
 				bkg_norm.setConstant(true);
 
 				// Import background
