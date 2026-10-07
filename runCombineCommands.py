@@ -30,7 +30,7 @@ for  i in range(n + 1):
 #file_name = "datacard_Higgs_Combined.root"
 # Use this for systematics testing for only a single channel
 #file_name = "Signal_datacards/datacard_eeee_X_copyForSystematicsTesting.root"
-<<<<<<< HEAD
+
 
 
 # Testing for limit improvement via number of channels
@@ -44,22 +44,19 @@ for  i in range(n + 1):
 
 #Datacard tests
 #file_name = "eeeeChannelOnly_copy.root"
-file_name = "datacard_Higgs_Combined_eeee_eeeu_eeuu_copy.root"
+file_name = "Signal_datacards/datacard_eeee_X_copy.root"
 
-=======
->>>>>>> 19289e8c08b11cb6a94ad7cd7bc23e24becf4b88
 
 print(os.listdir())
 
 terminal_outputs = []
-counter = 0
 
 # Note: When using AsymptoticLimits, comment out the --tries, -i, and "t" settings
-for mass in massArray:
+for completed, mass in enumerate(massArray, start=1):
 	
 	result = subprocess.run(
 	[
-		#"nohup",
+		"nohup",
 		"combine",
 		file_name,
 		#"-M", "AsymptoticLimits",
@@ -69,28 +66,20 @@ for mass in massArray:
 		"-m", "1000",
 		 #"--tries", "200",
 		 "-n", f"HiggsCombine{mass}",
-		"-i", "20000",
-		"-b", "20",
-<<<<<<< HEAD
+		"-i", "50000",
+		"-b", "200",
 		"-t", "1",
 		"--rMax", "100",
 		"-s", str(random.randint(1,999999)),
 		"--toysNoSystematics",
 		"-v", "2"
-=======
-		"-t", "2",
-		"-s", str(random.randint(1,999999)),
-		"--toysNoSystematics",
-		#"-v", "3",
-		"--saveToys"
->>>>>>> 19289e8c08b11cb6a94ad7cd7bc23e24becf4b88
 	],
 	capture_output = True,
 	text = True)
 	
 	terminal_outputs.append(result.stdout)
 	# terminal_outputs.append(result.stderr)
-	print(mass)
+	print(f"{completed}/{len(massArray)} finished (mass {mass}, exit code {result.returncode})", flush=True)
 	#print(terminal_outputs)
 
 median_limit_array = []
@@ -123,4 +112,3 @@ with open('result.txt', 'w') as file:
 	for terminal_output in terminal_outputs:
 		#file.write("Writing new mass point")
 		file.write(str(terminal_output))
-
