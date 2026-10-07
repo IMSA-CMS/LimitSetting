@@ -95,6 +95,30 @@ FitFunctionPDF::FitFunctionPDF(FitFunctionPDF const &other, const char *name)
 
 double FitFunctionPDF::evaluate() const
 {
+   return function->evaluate(x.arg().getVal(), realHiggsMass.arg().getVal(), nuisanceValues());
+}
+
+Int_t FitFunctionPDF::getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
+                                           const char*) const
+{
+   if (realHiggsMass.arg().dependsOn(x.arg()))
+      return 0;
+   for (const auto* delta : shape_Systematics)
+      if (delta->dependsOn(x.arg()))
+         return 0;
+   return function->hasAnalyticalIntegral() && matchArgs(allVars, analVars, x) ? 1 : 0;
+}
+
+double FitFunctionPDF::analyticalIntegral(Int_t code, const char* rangeName) const
+{
+   if (code != 1)
+      throw std::invalid_argument("Unknown FitFunctionPDF analytical integral");
+   return function->integral(x.min(rangeName), x.max(rangeName),
+                             realHiggsMass.arg().getVal(), nuisanceValues());
+}
+
+FitFunction::NuisanceValues FitFunctionPDF::nuisanceValues() const
+{
    FitFunction::NuisanceValues nuisances;
    for (std::size_t i = 0; i < shapeSystematicNames.size(); ++i)
    {
@@ -105,7 +129,7 @@ double FitFunctionPDF::evaluate() const
          throw std::invalid_argument("Shape-systematic deltas must be finite");
       nuisances.emplace(shapeSystematicNames[i], delta);
    }
-   return function->evaluate(x.arg().getVal(), realHiggsMass.arg().getVal(), nuisances);
+   return nuisances;
 }
 
 

@@ -48,6 +48,9 @@ public:
 
 
   double evaluate() const override;
+  Int_t getAnalyticalIntegral(RooArgSet& allVars, RooArgSet& analVars,
+                             const char* rangeName=nullptr) const override;
+  double analyticalIntegral(Int_t code, const char* rangeName=nullptr) const override;
   RooFormulaVar signal_norm(std::string channel_name) const;
 protected:
 
@@ -63,6 +66,7 @@ protected:
 
  
 private:
+  FitFunction::NuisanceValues nuisanceValues() const;
   std::shared_ptr<FitFunction> function; //! note that we have the custom impl for this since shr ptr io doesnt work
   std::vector<std::string> shapeSystematicNames;
 
