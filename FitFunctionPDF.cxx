@@ -117,9 +117,15 @@ double FitFunctionPDF::analyticalIntegral(Int_t code, const char* rangeName) con
                              realHiggsMass.arg().getVal(), nuisanceValues());
 }
 
-FitFunction::NuisanceValues FitFunctionPDF::nuisanceValues() const
+const FitFunction::NuisanceValues& FitFunctionPDF::nuisanceValues() const
 {
-   FitFunction::NuisanceValues nuisances;
+   if (cachedDeltas.size() != shapeSystematicNames.size())
+   {
+      cachedNuisances.clear();
+      cachedDeltas.assign(shapeSystematicNames.size(), 0.0);
+      for (const auto& name : shapeSystematicNames)
+         cachedNuisances.emplace(name, 0.0);
+   }
    for (std::size_t i = 0; i < shapeSystematicNames.size(); ++i)
    {
       // need to read the proxy in case of clone or imported pdfs can use redir'd nusiances
@@ -127,9 +133,13 @@ FitFunction::NuisanceValues FitFunctionPDF::nuisanceValues() const
       const double delta = static_cast<const RooAbsReal*>(shape_Systematics.at(static_cast<int>(i)))->getVal();
       if (!std::isfinite(delta))
          throw std::invalid_argument("Shape-systematic deltas must be finite");
-      nuisances.emplace(shapeSystematicNames[i], delta);
+      if (delta != cachedDeltas[i])
+      {
+         cachedNuisances.at(shapeSystematicNames[i]) = delta;
+         cachedDeltas[i] = delta;
+      }
    }
-   return nuisances;
+   return cachedNuisances;
 }
 
 
@@ -149,6 +159,8 @@ void FitFunctionPDF::Streamer(TBuffer &buffer)
    const auto *modelClass = TClass::GetClass(typeid(FitFunction));
    if (buffer.IsReading())
    {
+      cachedNuisances.clear();
+      cachedDeltas.clear();
       UInt_t start, count;
       const auto version = buffer.ReadVersion(&start, &count);
       if (version < 4)

@@ -66,9 +66,11 @@ protected:
 
  
 private:
-  FitFunction::NuisanceValues nuisanceValues() const;
+  const FitFunction::NuisanceValues& nuisanceValues() const;
   std::shared_ptr<FitFunction> function; //! note that we have the custom impl for this since shr ptr io doesnt work
   std::vector<std::string> shapeSystematicNames;
+  mutable FitFunction::NuisanceValues cachedNuisances; //! rebuilt from this PDF's proxies
+  mutable std::vector<double> cachedDeltas; //! indexed like shapeSystematicNames
 
   ClassDefOverride(FitFunctionPDF, 4)
 };

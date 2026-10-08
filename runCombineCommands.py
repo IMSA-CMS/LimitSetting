@@ -56,7 +56,7 @@ for completed, mass in enumerate(massArray, start=1):
 	
 	result = subprocess.run(
 	[
-		"nohup",
+		# "nohup",
 		"combine",
 		file_name,
 		#"-M", "AsymptoticLimits",
@@ -74,7 +74,7 @@ for completed, mass in enumerate(massArray, start=1):
 		"--toysNoSystematics",
 		"-v", "2"
 	],
-	capture_output = True,
+	capture_output = False,
 	text = True)
 	
 	terminal_outputs.append(result.stdout)
