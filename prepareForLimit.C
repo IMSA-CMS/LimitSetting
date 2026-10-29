@@ -36,6 +36,7 @@
 #include "RooClassFactory.h"
 #include "RooArgList.h"
 #include "RooGenericPdf.h"
+#include "RooNumIntConfig.h"
 
 
 #include "FitFunctionPDF.h"
@@ -215,6 +216,10 @@ void makeCombinedDatacard(std::string filename, std::vector<Channel> channels, s
 void prepareForLimit()
 {
 	gROOT->SetBatch(true); // I can't remember what this does exactly, but it needs to be here
+	// need to keep the normalization derivatives accurate cause raw signal has v small yield
+	RooNumIntConfig signalIntegration(*RooAbsReal::defaultIntegratorConfig());
+	signalIntegration.setEpsAbs(1e-12);
+	signalIntegration.setEpsRel(1e-12);
 
 	// Get the Signal Events from Monte Carlo
 	// We will be fitting our model to these events
@@ -350,6 +355,7 @@ void prepareForLimit()
 				(channel.name + "_signal_" + X_or_Y).c_str(), (channel.name + "_signal").c_str(),
 				mass, realHiggsMass, Bee, Beu, norm_Systematic, shape_Systematic,
 				model, shapeNames, shapeDeltas);
+			signal_pdf->setIntegratorConfig(signalIntegration);
 
 			auto signal_norm = signal_pdf->signal_norm(signal_pdf->GetName());
 
