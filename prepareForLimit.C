@@ -55,7 +55,6 @@ struct Channel
 	std::string name;
 
 	Channel(std::string channelName) : name(channelName) {}
-
 };
 
 
@@ -63,23 +62,23 @@ std::vector<double> split(const std::string& line);
 std::string replaceAll(std::string unmodifiedString, const std::string from, const std::string to);
 
 
-
-
-void makeCombinedDatacard(std::string filename, std::vector<Channel> channels)
+void makeCombinedDatacard(std::string filename, std::vector<Channel> channels, std::set<std::string> shapeNames)
 {
     std::vector<std::string> variants = {"X", "Y"};
-    std::ofstream out(filename + ".txt");
+    std::ostringstream out;
     int nBins = channels.size() * variants.size();
+
     // header
-    out << "imax " << nBins << "\n";
-    out << "jmax " << (3 * nBins - 1) << "\n";
-    out << "kmax *\n";
+    out << "imax " << nBins << "\n";              
+    out << "jmax " << (3 * nBins - 1) << "\n";    
+    out << "kmax *\n";                           
     out << "---------------------------------------------\n";
-    // shapes block
-    for (size_t i = 0; i < channels.size(); i++) {
-        for (size_t j = 0; j < variants.size(); j++) {
-            std::string ch = channels[i].name;
-            std::string var = variants[j];
+
+    // shapes
+    for (size_t i = 0; i < channels.size(); i++) {          
+        for (size_t j = 0; j < variants.size(); j++) {    
+            std::string ch = channels[i].name;              
+            std::string var = variants[j];               
             std::string bin = "ch" + std::to_string(i+1) + "_ch" + std::to_string(j+1);
             out << "shapes " << ch << "_" << var << "  " << bin
                 << "  higgsworkspace.root  higgsworkspace:" << ch << "_signal_" << var << "\n";
@@ -92,48 +91,89 @@ void makeCombinedDatacard(std::string filename, std::vector<Channel> channels)
         }
     }
     out << "---------------------------------------------\n";
-    // bin / observation
-    out << "bin  ";
+
+    out << "bin  ";                                          
     for (size_t i = 0; i < channels.size(); i++)
         for (size_t j = 0; j < variants.size(); j++)
-            out << "ch" << i+1 << "_ch" << j+1 << "  ";
-    out << "\nobservation  ";
-    for (int i = 0; i < nBins; i++) out << "-1  ";
+            out << "ch" << i+1 << "_ch" << j+1 << "  ";   
+    out << "\nobservation  ";                              
+    for (int i = 0; i < nBins; i++) out << "-1  ";       
     out << "\n---------------------------------------------\n";
-    // process rows
-    out << "bin  ";
+
+    out << "bin  ";                                        
     for (size_t i = 0; i < channels.size(); i++)
         for (size_t j = 0; j < variants.size(); j++) {
             std::string bin = "ch" + std::to_string(i+1) + "_ch" + std::to_string(j+1);
-            out << bin << "  " << bin << "  " << bin << "  ";
+            out << bin << "  " << bin << "  " << bin << "  ";   
         }
-    out << "\nprocess  ";
+    out << "\nprocess  ";                                   
     for (auto& ch : channels)
         for (auto& var : variants)
             out << ch.name << "_" << var << "  ZZ_" << ch.name << "_" << var
-                << "  ttbarMultiboson_" << ch.name << "_" << var << "  ";
-    out << "\nprocess  ";
+                << "  ttbarMultiboson_" << ch.name << "_" << var << "  ";  
+    out << "\nprocess  ";                                   
     for (int i = 0; i < nBins; i++)
-        out << "0  1  2  ";
-    out << "\nrate  ";
-    for (int i = 0; i < 3 * nBins; i++) out << "1  ";
+        out << "0  1  2  ";                                 
+    out << "\nrate  ";                                       
+    for (int i = 0; i < 3 * nBins; i++) out << "1  ";       
     out << "\n---------------------------------------------\n";
-}
 
-std::string replaceAll(std::string unmodifiedString, const std::string from, const std::string to)
-{
-    if (from.empty())
-        return unmodifiedString; // avoid infinite loop if 'from' is empty
+       std::ofstream(filename + ".txt") << out.str();
 
-    std::string str = unmodifiedString;
-    size_t start_pos = 0;
-    while ((start_pos = str.find(from, start_pos)) != std::string::npos) {
-        str.replace(start_pos, from.length(), to);
-        start_pos += to.length(); // move past the replaced part
+    std::map<std::string, std::pair<double, double>> xsec;
+    std::ifstream in("crossSections.txt");    
+    std::string line;                         
+    while (std::getline(in, line))             
+    {
+        std::istringstream ss(line);           
+        std::string name;                     
+        double value = 0, error = 0;           
+        if (ss >> name >> value)               
+        {
+            ss >> error;                     
+            xsec[name] = {value, error};     
+        }
     }
-    
-    return str;
 
+    auto frac = [&](std::vector<std::string> samples) {
+    double sumOfSquares = 0;                       
+    for (const auto& s : samples)                  
+    {
+        auto [v, e] = xsec[s];                     
+        if (v > 0 && e > 0)                       
+        {
+            double fr = e / v;                     // fractional uncertainty (2nd / 1st)
+            sumOfSquares += std::pow(fr, 2);       // (fr)^2, added to the total
+        }
+    }
+    return std::sqrt(sumOfSquares);                // sqrt( sum of (fr)^2 )
+	};
+
+    std::ostringstream syst;
+    for (const auto& n : shapeNames)
+        syst << n << " param 0 1\n";          
+
+    syst << "lumi lnN";                        
+    for (int i = 0; i < 3 * nBins; i++)   
+        syst << " 1.025";                      // PLACEHOLDER
+    syst << "\n";                            
+
+    const std::string procNames[3] = {"signal", "ZZ", "ttbarMultiboson"};
+    const double fracs[3] = {
+        0,                                     
+        frac({"ZZTo4L", "ZZTo2mu2tau", "ZZTo2e2mu", "ZZTo2e2tau", "ZZTo4mu", "ZZTo4tau", "ZZTo4e"}),   // ZZ samples
+        frac({"WWTo2L2Nu", "WZTo3LNu", "WWW", "WWZ", "WZZ", "ZZZ", "TTW", "TTZ", "TTTo2L2Nu"})};       // ttbarMultiboson samples
+    for (int p = 1; p <= 2; p++)               // only ZZ (1) and ttbarMultiboson (2) get a row
+    {
+        syst << "xsec_" << procNames[p] << " lnN";   
+        for (int i = 0; i < 3 * nBins; i++)          
+            syst << (i % 3 == p                     
+                         ? " " + std::to_string(1 + fracs[p])   
+                         : " -");                              
+        syst << "\n";                                
+    }
+
+    std::ofstream(filename + "_syst.txt") << out.str() << syst.str();
 }
 
 // Creates the Signal Normalization Object for a channel - The Normalization object must vary with mass when it is added to workspace, which is why it is a FormulaVar and not just be the integral over the signal pdf object 
@@ -243,8 +283,8 @@ void prepareForLimit()
 	std::vector<std::string> channelsToCheck = {"eeee", "uuuu"};
 
 	// Get signal and background parameters from files - Note: Update file paths later
-	std::string signalParamsFileName = "/uscms/home/ssahoo1/heze/fits/9_23_26/imsa/H++SignalParameterFunctions.txt";
-	std::string backgroundParamsFileName = "/uscms/home/ssahoo1/heze/fits/9_23_26/imsa/H++BackgroundFunctions.txt";
+	std::string signalParamsFileName = "/uscms/home/ssahoo1/heze/fits/9_28_26/kansas/H++SignalParameterFunctions.txt";
+	std::string backgroundParamsFileName = "/uscms/home/ssahoo1/heze/fits/9_28_26/kansas/H++BackgroundFunctions.txt";
 	const std::map<std::string, std::string> backgroundProcessNames = {
 		{"Drell-Yan Background", "DY"},
 		{"ZZ Background", "ZZ"},
@@ -345,7 +385,10 @@ void prepareForLimit()
 		}
 	}
 
-	makeCombinedDatacard ("datacard",channels);
+	std::set<std::string> nuisanceNames;                  
+	for (const auto& entry : shapeNuisances)                
+		nuisanceNames.insert(entry.first);          
+	makeCombinedDatacard("datacard", channels, nuisanceNames); 
 
 	w_sig.Print("v");
 	std::cout << "\n";

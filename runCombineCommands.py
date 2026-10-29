@@ -30,7 +30,6 @@ for  i in range(n + 1):
 #file_name = "datacard_Higgs_Combined.root"
 # Use this for systematics testing for only a single channel
 #file_name = "Signal_datacards/datacard_eeee_X_copyForSystematicsTesting.root"
-<<<<<<< HEAD
 
 
 # Testing for limit improvement via number of channels
@@ -44,10 +43,8 @@ for  i in range(n + 1):
 
 #Datacard tests
 #file_name = "eeeeChannelOnly_copy.root"
-file_name = "datacard_Higgs_Combined_eeee_eeeu_eeuu_copy.root"
+file_name = "datacard.root"
 
-=======
->>>>>>> 19289e8c08b11cb6a94ad7cd7bc23e24becf4b88
 
 print(os.listdir())
 
@@ -69,23 +66,15 @@ for mass in massArray:
 		"-m", "1000",
 		 #"--tries", "200",
 		 "-n", f"HiggsCombine{mass}",
-		"-i", "20000",
-		"-b", "20",
-<<<<<<< HEAD
+		"-i", "200",
+		"-b", "2",
 		"-t", "1",
-		"--rMax", "100",
+		# "--rMax", "100",
 		"-s", str(random.randint(1,999999)),
 		"--toysNoSystematics",
 		"-v", "2"
-=======
-		"-t", "2",
-		"-s", str(random.randint(1,999999)),
-		"--toysNoSystematics",
-		#"-v", "3",
-		"--saveToys"
->>>>>>> 19289e8c08b11cb6a94ad7cd7bc23e24becf4b88
 	],
-	capture_output = True,
+	capture_output = False,
 	text = True)
 	
 	terminal_outputs.append(result.stdout)
