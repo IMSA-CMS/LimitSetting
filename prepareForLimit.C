@@ -248,8 +248,8 @@ void prepareForLimit()
 	std::vector<std::string> channelsToCheck = {"eeee", "uuuu"};
 
 	// Get signal and background parameters from files - Note: Update file paths later
-	std::string signalParamsFileName = "/uscms/home/ssahoo1/heze/fits/9_23_26/imsa/H++SignalParameterFunctions.txt";
-	std::string backgroundParamsFileName = "/uscms/home/ssahoo1/heze/fits/9_23_26/imsa/H++BackgroundFunctions.txt";
+	std::string signalParamsFileName = "/uscms/home/pdong/work/analysis/CMSSW_16_0_0/src/CMSAnalysis/Analysis/bin/fitting/H++SignalParameterFunctions.txt";
+	std::string backgroundParamsFileName = "/uscms/home/pdong/work/analysis/CMSSW_16_0_0/src/CMSAnalysis/Analysis/bin/fitting/H++BackgroundFunctions.txt";
 	const std::map<std::string, std::string> backgroundProcessNames = {
 		{"Drell-Yan Background", "DY"},
 		{"ZZ Background", "ZZ"},
@@ -263,13 +263,15 @@ void prepareForLimit()
 	//takes first from different gensims, eventually we will need to do something with them
 	for (const auto& signalModel : signalModels)
 	{
+		std::cout << "Signal Model Name: " << signalModel.getName() << "\n";
 		channelNames.insert(FitFunction::decodeName(signalModel.getName()).at("Channel"));
+		std::cout << "Channel Name: " << FitFunction::decodeName(signalModel.getName()).at("Channel") << "\n";
 	}
 
 	std::vector<Channel> channels;
 	for (const auto& channelName : channelNames)
 	{
-		std::cout << "Channel name: " << '\n';
+		std::cout << "Channel name: " << channelName << '\n';
 		channels.push_back(Channel(channelName));
 	}
 
@@ -346,7 +348,7 @@ void prepareForLimit()
 				// Import background
 				std::cout << "Importing Background PDF " << bkg_pdf->GetName() << "\n";
 				w_sig.import(*bkg_pdf);
-				std::cout << "Importing Background Normalization " << bkg_norm.GetName() << "\n";
+				std::cout << "Importing Background Normalization " << backgroundFunction->getNormExpression("") << "\n";
 				w_sig.import(bkg_norm);
 			}
 		}
