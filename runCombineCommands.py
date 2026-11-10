@@ -1,115 +1,67 @@
 #!/usr/bin/env python3
 
-import subprocess
+import argparse
+import json
+import math
 import re
-import random
-import os
-
-lowerBound = 500
-upperBound = 1500
-step = 100
-n = int((upperBound - lowerBound) / step)
-massArray = []
-for  i in range(n + 1):
-	massArray.append(lowerBound + i * step)
-
-#file_name = "eeee-uuuuChannelsOnly.root"
-#file_name = "eeeeChannelOnly.root"
-#file_name = "Signal_datacards/datacard_Higgs_Combined_No_eeuu.root" 
-# Use this for no systematics (make sure to put systematics here as final)
-#file_name = "Signal_datacards/datacard_Higgs_Combined.root"
-# Use this for no systematics testing with only a single channel
-#file_name = "Signal_datacards/datacard_eeee_X_copy.root"
-
-# Use this for systematics testing
-#file_name = "Signal_datacards/datacard_Higgs_Combined_copy.root"
-#file_name = "Signal_datacards/datacard_Higgs_Combined_copy2.root"
-#file_name = "Signal_datacards/datacard_Higgs_Combined.root"
-#file_name = "Signal_datacards/datacard_Higgs_Combined_copy3.root"
-
-#file_name = "datacard_Higgs_Combined.root"
-# Use this for systematics testing for only a single channel
-#file_name = "Signal_datacards/datacard_eeee_X_copyForSystematicsTesting.root"
+import subprocess
+from pathlib import Path
 
 
-# Testing for limit improvement via number of channels
-#file_name = "eeeeChannelOnly.root"
-#file_name = "datacard_Higgs_Combined_eeee_eeeu.root"
-#file_name = "datacard_Higgs_Combined_eeee_eeeu_eeuu.root"
-#file_name = "datacard_Higgs_Combined_eeee_eeeu_eeuu_eueu.root"
-#file_name = "datacard_Higgs_Combined_eeee_eeeu_eeuu_eueu_euuu.root"
-#file_name = "datacard_Higgs_Combined_eeee_eeeu_eeuu_eueu_euuu.root"
-#file_name = "Signal_datacards/datacard_Higgs_Combined.root"
-
-#Datacard tests
-#file_name = "eeeeChannelOnly_copy.root"
-file_name = "datacard.root"
+def parse_expected(output):
+    values = {}
+    for quantile, value in re.findall(r"Expected\s+(2\.5|16\.0|50\.0|84\.0|97\.5)%:\s+r <\s+([-+\d.eE]+)", output):
+        if quantile in values:
+            raise ValueError("Duplicate expected quantile " + quantile)
+        values[quantile] = float(value)
+    ordered = [values[q] for q in ("2.5", "16.0", "50.0", "84.0", "97.5")]
+    if not all(math.isfinite(v) and v > 0 for v in ordered) or ordered != sorted(ordered):
+        raise ValueError("Invalid expected limits")
+    return ordered
 
 
-print(os.listdir())
-
-terminal_outputs = []
-counter = 0
-
-# Note: When using AsymptoticLimits, comment out the --tries, -i, and "t" settings
-for mass in massArray:
-	
-	result = subprocess.run(
-	[
-		"nohup",
-		"combine",
-		file_name,
-		"-M", "AsymptoticLimits",
-		#"-M", "MarkovChainMC",
-		"--freezeParameters", "realHiggsMass,b_ee,b_eu",
-		"--setParameters", f"realHiggsMass={mass},b_ee=1,b_eu=1",
-		"-m", "1000",
-		 #"--tries", "200",
-		"-n", f"HiggsCombine{mass}",
-		#"-i", "200",
-		#"-b", "2",
-		"-t", "1",
-		# "--rMax", "100",
-		"-s", str(random.randint(1,999999)),
-		"--toysNoSystematics",
-		"-v", "2"
-	],
-	capture_output = False,
-	text = True)
-	
-	terminal_outputs.append(result.stdout)
-	# terminal_outputs.append(result.stderr)
-	print(mass)
-	#print(terminal_outputs)
-
-median_limit_array = []
-band_68_array = []
-band_95_array = []
-
-for terminal_output in terminal_outputs:
-	median_match= re.search(r"median expected limit: r < ([\d\.]+)", terminal_output)
-	band_68_match = re.search(r"68% expected band : ([\d\.]+) < r < ([\d\.]+)", terminal_output)
-	band_95_match = re.search(r"95% expected band : ([\d\.]+) < r < ([\d\.]+)", terminal_output)
-
-	band_68 = (float(band_68_match.group(1)), float(band_68_match.group(2))) if band_68_match else (None,None)
-	band_95 = (float(band_95_match.group(1)), float(band_95_match.group(2))) if band_95_match else (None,None)
-	median_limit = float(median_match.group(1)) if median_match else None
-
-	median_limit_array.append(median_limit)
-	band_68_array.append(band_68)
-	band_95_array.append(band_95)
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--datacard", default="datacard.root")
+    parser.add_argument("--masses", nargs="+", type=int, default=list(range(500, 1501, 100)))
+    parser.add_argument("--parametric", action="store_true")
+    args = parser.parse_args()
+    if len(args.masses) > 1 and "{mass}" not in args.datacard and not args.parametric:
+        parser.error("Template scans require a mass-specific --datacard path containing {mass}")
+    results = []
+    failed = False
+    with open("result.txt", "w") as diagnostics, open("higgsLimits.txt", "w") as limits:
+        limits.write("mass    median Limit    1_Sigma Lower   1_Sigma Upper   2_Sigma Lower   2_Sigma Upper\n")
+        for mass in args.masses:
+            command = ["combine", args.datacard.format(mass=mass), "-M", "AsymptoticLimits",
+                       "--run", "blind", "-m", str(mass), "-n", f"HiggsCombine{mass}"]
+            frozen = []
+            if args.parametric:
+                frozen.extend(["realHiggsMass", "b_ee", "b_eu"])
+                command.extend(["--setParameters", f"realHiggsMass={mass},b_ee=1,b_eu=1"])
+            if frozen:
+                command.extend(["--freezeParameters", ",".join(frozen)])
+            record = {"mass": mass, "command": command}
+            try:
+                result = subprocess.run(command, capture_output=True, text=True)
+                record["exit_code"] = result.returncode
+                diagnostics.write(f"mass={mass} exit_code={result.returncode}\n{result.stdout}\n{result.stderr}\n")
+                Path(f"combine_{mass}.log").write_text(result.stdout + "\n" + result.stderr)
+                if result.returncode:
+                    raise RuntimeError(f"Combine exited with {result.returncode}")
+                q = parse_expected(result.stdout)
+                record["expected"] = dict(zip(("0.025", "0.16", "0.5", "0.84", "0.975"), q))
+                limits.write(f"{mass:<7} {q[2]:<15g} {q[1]:<15g} {q[3]:<15g} {q[0]:<15g} {q[4]:<15g}\n")
+                print(mass, record["expected"], flush=True)
+            except (OSError, RuntimeError, ValueError, KeyError) as error:
+                failed = True
+                record["error"] = str(error)
+                diagnostics.write(f"mass={mass} error={error}\n")
+                print(f"FAILED mass={mass}: {error}", flush=True)
+            results.append(record)
+            Path("combine_results.json").write_text(json.dumps(results, indent=2) + "\n")
+    return int(failed)
 
 
-
-with open('higgsLimits.txt', 'w') as file:
-	file.write("mass".ljust(8) + "median Limit".ljust(16) + "1_Sigma Lower".ljust(16) + "1_Sigma Upper".ljust(16) + "2_Sigma Lower".ljust(16) + "2_Sigma Upper".ljust(16) + "\n")
-	for i in range(n+1):
-		file.write(f"{str(massArray[i]).ljust(7)} {str(median_limit_array[i]).ljust(15)} {str(band_68_array[i][0]).ljust(15)} {str(band_68_array[i][1]).ljust(15)} {str(band_95_array[i][0]).ljust(15)} {str(band_95_array[i][1]).ljust(15)} \n")
-	
-#print(result)
-
-with open('result.txt', 'w') as file:
-	for terminal_output in terminal_outputs:
-		#file.write("Writing new mass point")
-		file.write(str(terminal_output))
-
+if __name__ == "__main__":
+    raise SystemExit(main())
