@@ -12,12 +12,14 @@ if mode == 'write':
     f = ROOT.TFile('fixture.root', 'RECREATE')
     for name, bins in [('0tau_signal', [1, 2, 3, 4]), ('0tau_ZZ', [4, 3, 2, 1]), ('0tau_ttbarMultiboson', [2, 4, 1, 3])]:
         h = ROOT.TH2D(name, 'Software fixture only', 2, array('d', [50, 100, 300]), 2, array('d', [50, 200, 400]))
-        h.GetXaxis().SetTitle('m++')
-        h.GetYaxis().SetTitle('m--')
+        h.GetXaxis().SetTitle('mDCH2')
+        h.GetYaxis().SetTitle('mDCH1')
         for ix in range(1, 3):
             for iy in range(1, 3):
                 h.SetBinContent(ix, iy, bins[2*(ix-1)+iy-1])
         h.Write()
+    for name, rate in [('0tau_signal_norm', 7), ('0tau_ZZ_norm', 8), ('0tau_ttbarMultiboson_norm', 9)]:
+        ROOT.TParameter('double')(name, rate).Write()
     f.Close()
     assert ROOT.gROOT.LoadMacro(str(Path(sys.argv[2]).resolve())+'+') == 0
     ROOT.prepareForLimit(False, 'fixture.root', 500, '0tau')
@@ -59,11 +61,11 @@ elif mode == 'check':
     w = f.Get('higgsworkspace')
     x, y = w.var('massX'), w.var('massY')
     variables = ROOT.RooArgSet(x, y)
-    for name, bins in [('0tau_signal', [1, 2, 3, 4]), ('0tau_ZZ', [4, 3, 2, 1]), ('0tau_ttbarMultiboson', [2, 4, 1, 3])]:
+    for name, bins, rate in [('0tau_signal', [1, 2, 3, 4], 7), ('0tau_ZZ', [4, 3, 2, 1], 8), ('0tau_ttbarMultiboson', [2, 4, 1, 3], 9)]:
         pdf = w.pdf(name)
         assert pdf and pdf.ClassName() == 'RooHistPdf'
         assert math.isclose(pdf.createIntegral(variables, ROOT.RooFit.NormSet(variables)).getVal(), 1, rel_tol=1e-12)
-        assert math.isclose(w.var(name+'_norm').getVal(), sum(bins), rel_tol=1e-12)
+        assert math.isclose(w.var(name+'_norm').getVal(), rate, rel_tol=1e-12)
         recovered = []
         for ix, (lo, hi) in enumerate([(50, 100), (100, 300)]):
             for iy, (yl, yh) in enumerate([(50, 200), (200, 400)]):
@@ -73,15 +75,15 @@ elif mode == 'check':
                 assert math.isclose(pdf.getVal(variables), expected, rel_tol=1e-12)
                 recovered.append(pdf.getVal(variables)*(hi-lo)*(yh-yl)*sum(bins))
         assert all(math.isclose(a, b, rel_tol=1e-12) for a, b in zip(recovered, bins))
-    assert math.isclose(w.data('0tau_data_obs').sumEntries(), 20, rel_tol=1e-12)
+    assert math.isclose(w.data('0tau_data_obs').sumEntries(), 17, rel_tol=1e-12)
     converted = ROOT.TFile('datacard.root')
     cw = converted.Get('w')
     assert cw.pdf('model_s') and cw.data('data_obs')
     assert not cw.set('nuisances') or cw.set('nuisances').getSize() == 0
     observables = cw.set('observables')
-    for strength, expected_yield in [(0, 20), (1, 30), (2, 40)]:
+    for strength, expected_yield in [(0, 17), (1, 24), (2, 31)]:
         cw.var('r').setVal(strength)
         assert math.isclose(cw.pdf('model_s').expectedEvents(observables), expected_yield, rel_tol=1e-12)
-    print(json.dumps({'scope': 'software fixture only, no physics result', 'joint_pdf_integrals': [1, 1, 1], 'yields': [10, 10, 10], 'observation': 20, 'converted_model': True}))
+    print(json.dumps({'scope': 'software fixture only, no physics result', 'joint_pdf_integrals': [1, 1, 1], 'yields': [7, 8, 9], 'observation': 17, 'converted_model': True}))
 else:
     raise ValueError(mode)

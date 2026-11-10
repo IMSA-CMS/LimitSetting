@@ -8,6 +8,7 @@
 #include <set>
 #include <stdexcept>
 #include "TFile.h"
+#include "TParameter.h"
 #include "TH2.h"
 #include "TROOT.h"
 #include "RooArgSet.h"
@@ -94,14 +95,17 @@ void prepareForLimit(bool includeSystematics = false, const char* pairedInputs =
     const std::string channel(channelName);
     const std::vector<std::string> names{channel + "_signal", channel + "_ZZ", channel + "_ttbarMultiboson"};
     std::vector<TH2*> histograms;
+    std::vector<double> expectedYields;
     for (const auto& name : names)
     {
         auto* histogram = input.Get<TH2>(name.c_str());
         if (!histogram)
             throw std::runtime_error("Missing paired TH2: " + name);
-        if (std::string(histogram->GetXaxis()->GetTitle()) != "m++" ||
-            std::string(histogram->GetYaxis()->GetTitle()) != "m--")
-            throw std::runtime_error("Paired TH2 axes must declare m++ and m--");
+        const std::string xTitle(histogram->GetXaxis()->GetTitle());
+        const std::string yTitle(histogram->GetYaxis()->GetTitle());
+        if (!((xTitle == "m++" && yTitle == "m--") ||
+              (xTitle == "mDCH2" && yTitle == "mDCH1")))
+            throw std::runtime_error("Paired TH2 axes must identify the two mass coordinates");
         for (int ix = 0; ix <= histogram->GetNbinsX() + 1; ++ix)
             for (int iy = 0; iy <= histogram->GetNbinsY() + 1; ++iy)
             {
@@ -114,6 +118,10 @@ void prepareForLimit(bool includeSystematics = false, const char* pairedInputs =
             }
         if (!std::isfinite(histogram->Integral()) || histogram->Integral() <= 0)
             throw std::runtime_error("Template yield must be finite and positive: " + name);
+        auto* fittedYield = input.Get<TParameter<double>>((name + "_norm").c_str());
+        const double expectedYield = fittedYield ? fittedYield->GetVal() : histogram->Integral();
+        if (!std::isfinite(expectedYield) || expectedYield <= 0)
+            throw std::runtime_error("Expected yield must be finite and positive: " + name);
         if (!histograms.empty())
         {
             const auto* reference = histograms.front();
@@ -127,10 +135,11 @@ void prepareForLimit(bool includeSystematics = false, const char* pairedInputs =
                     throw std::runtime_error("Inconsistent Y bin edges");
         }
         histograms.push_back(histogram);
+        expectedYields.push_back(expectedYield);
     }
     const auto* reference = histograms.front();
-    RooRealVar massX("massX", "m++", reference->GetXaxis()->GetXmin(), reference->GetXaxis()->GetXmax());
-    RooRealVar massY("massY", "m--", reference->GetYaxis()->GetXmin(), reference->GetYaxis()->GetXmax());
+    RooRealVar massX("massX", reference->GetXaxis()->GetTitle(), reference->GetXaxis()->GetXmin(), reference->GetXaxis()->GetXmax());
+    RooRealVar massY("massY", reference->GetYaxis()->GetTitle(), reference->GetYaxis()->GetXmin(), reference->GetYaxis()->GetXmax());
     std::vector<double> xEdges, yEdges;
     for (int i = 1; i <= reference->GetNbinsX() + 1; ++i)
         xEdges.push_back(reference->GetXaxis()->GetBinLowEdge(i));
@@ -145,15 +154,17 @@ void prepareForLimit(bool includeSystematics = false, const char* pairedInputs =
     {
         RooDataHist data((names[i] + "_template").c_str(), names[i].c_str(), RooArgList(massX, massY), histograms[i]);
         RooHistPdf pdf(names[i].c_str(), names[i].c_str(), RooArgSet(massX, massY), data, 0);
-        RooRealVar norm((names[i] + "_norm").c_str(), names[i].c_str(), histograms[i]->Integral());
+        RooRealVar norm((names[i] + "_norm").c_str(), names[i].c_str(), expectedYields[i]);
         norm.setConstant(true);
         if (workspace.import(pdf) || workspace.import(norm))
             throw std::runtime_error("Cannot import paired PDF or yield");
-        std::cout << names[i] << " expected yield " << norm.getVal() << '\n';
+        std::cout << names[i] << " template integral " << histograms[i]->Integral()
+                  << " expected yield " << norm.getVal() << '\n';
     }
     std::unique_ptr<TH2> observation(static_cast<TH2*>(histograms[1]->Clone("asimov_background")));
     observation->SetDirectory(nullptr);
-    observation->Add(histograms[2]);
+    observation->Scale(expectedYields[1] / histograms[1]->Integral());
+    observation->Add(histograms[2], expectedYields[2] / histograms[2]->Integral());
     RooDataHist data((channel + "_data_obs").c_str(), "Background-only simulation expectation",
                      RooArgList(massX, massY), observation.get());
     if (workspace.import(data))
