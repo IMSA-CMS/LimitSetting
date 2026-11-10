@@ -1,0 +1,235 @@
+CMS 2D repair and validation, 2026-11-09
+
+Status: PARTIAL. No validated 2D physics limit exists from this run.
+
+Initial sources:
+LimitSetting two-dimensional b3567c03dd84f76472787b435c0dc83b347eaded.
+CMSAnalysis master 5e9d844056b541e81a0a69433685bd5b45873431.
+Remote original CMSAnalysis a2ca53a24b0a1df173bb448c57483f2b4da5d64b.
+Remote installed Combine v11.0.0, CMSSW_16_0_0, el9_amd64_gcc13,
+ROOT 6.36.07. The original release and collaborator directories were not modified.
+Both local source worktrees use repair-2d-20261109.
+
+Working locations:
+Local sources: /home/cinna/sir/{LimitSetting,CMSAnalysis}-2d-20261109.
+Local evidence: /home/cinna/sir/2d-validation-20261109.
+Remote evidence: /uscms_data/d3/cjdavis/limitsetting-2d-20261109.
+Isolated remote release: the CMSSW_16_0_0 directory below that location.
+The release was created with scram project; Combine was archived from the installed
+v11.0.0 checkout, CMSAnalysis from the pinned master commit. Only task source files
+were overlaid. All compilation used two jobs.
+
+External dependency blocking the physics result:
+The current Kansas inputs in
+/eos/uscms/store/user/greddy/DCH_files/inputs_nopair/hist_peter
+contain separate h_mDCH1, h_mDCH2 and a 400-bin h_mDCH12flat, rather than
+selected charge-resolved event records. The flattened histogram has no axis labels
+or event identifiers. The producer that fills it was not located in the supplied
+repositories or the relevant available EOS sources. The user confirmed they do not
+have that source. A 20x20 candidate unflattening was audited; modulo-20 gives the
+rebinned h_mDCH2 marginal and division-by-20 gives h_mDCH1, with differences where
+the paired histogram loses events outside its window. This is evidence of a joint
+mDCH1/mDCH2 representation, not evidence that those coordinates are m++ and m--.
+Neither entry-wise pairing nor an assumed charge-order permutation was used.
+
+Older raw Events trees exist, for example
+/eos/uscms/store/user/greddy/DCH_files/DCH_out/HppM500_2018/HppM500_001.root
+with 165961 entries and run/lumi/evt and charge branches. Their mapping to the
+current selected Kansas histograms, weight recipe and cross-section bookkeeping
+is not established. The available DCH_presel_peter.C writes mH1/mH2 and does not
+fill the current flattened histogram. Reprocessing those raw files with invented
+selection or weight conventions would not preserve the requested analysis.
+
+Needed to unblock: the current producer and its charge/flattening convention,
+selection, normalization and flow handling, or selected same-event
+(run,lumi,event,m++,m--,weight) records with that provenance for signal and all
+backgrounds. TH2 inputs can be used once their event association and yields have
+been verified. A fitted pair of 1D functions cannot reconstruct missing correlations.
+
+Baseline execution:
+The original prepareForLimit.C+(false) fails because FitFunctionPDF2D.h is absent
+from CombinedLimit/interface. Usefulstuff/output900.root has a Float_t mass branch;
+the original macro binds Double_t buffers twice to that one branch. The reproduced
+loop accepts zero of 117924 entries. Even with matching branch types, rebinding
+one branch would not create paired coordinates. The original data source is signal
+MC and was reused across all channels. baseline.log and baseline-macro.log retain
+these failures. Original DSCB n=1 produces zero density from its singular
+normalization; n<1 can produce apparently positive but nonintegrable densities.
+
+DSCB repair:
+Both exponents are bounded below by 1.000001 at evaluation, including evaluation
+through FitFunctionParameterization and its mass/nuisance interpolation. There is
+no finite upper cap. All nominal supplied fitted exponents across 500:100:1500
+were inspected: 176 values span 1.4066162569118172 to 48.04581161419836.
+The initially considered fitter upper limit 10 would change valid nominal inputs
+and was removed before final validation. log1p tail evaluation and n/(n-1)/alpha
+normalization avoid the original large-n numerical cancellation/overflow.
+The 1e-6 lower margin is small relative to the nominal distance from 1, and the
+binary subtraction error of (1+margin)-1 is 8.23e-11 relative, versus 5.84e-10
+for 1e-7 and 6.08e-9 for 1e-8. The selected margin meets a 1e-10 target for this
+subtraction. The same bounded exponent enters the tail and its analytic full-line
+normalization; returned density is not clipped. Invalid/nonfinite transitions,
+widths, normalization or coordinates throw rather than form a plausible PDF.
+Normalizations and event weights in input files are not changed.
+
+2D construction repair:
+prepareForLimit defaults to statistics only and requires an external paired-input.root.
+It accepts one supported channel at a specified mass. Required TH2 keys for 0tau
+are 0tau_signal, 0tau_ZZ and 0tau_ttbarMultiboson, with X-axis title m++ and Y-axis
+title m--, common explicit bin edges, expected weighted counts, finite nonnegative
+bins and no unhandled flow content or error. Labels are an input contract; they do
+not substitute for the missing producer audit. Negative bins are rejected, not clipped.
+RooDataHist and RooHistPdf retain the actual supplied joint bins and variable widths.
+Each yield is the corresponding 2D integral. The expected observation is the sum
+of the two backgrounds, unique to the channel. Cassie's existing card layout and
+process/PDF naming are retained. Placeholder systematic output is removed;
+includeSystematics=true fails explicitly until genuine joint variations and valid
+rate definitions are available. The unused product FitFunctionPDF2D class remains
+for compatibility; it is not used as the joint model.
+
+Runner:
+Captures stdout/stderr, exit codes and per-mass diagnostics; parses all five
+AsymptoticLimits expected quantiles including scientific notation; rejects missing,
+duplicate, nonfinite, nonpositive or unordered limits; omits failed points from the
+numeric table while recording their error and returning nonzero. Uses the actual
+mass for -m. A template scan requires {mass} in the card path, so one fixed template
+cannot silently stand in for every mass. --parametric retains the original realHiggsMass
+and branching-variable controls for a mass-dependent parametric workspace.
+No nohup, random toy, or unsupported -S option is used. Systematics are absent from
+the initial builder's card; the runner does not silently alter the supplied model.
+The installed v11.0.0 rejects -S and crashes when allConstrainedNuisances is frozen
+on the nuisance-free one-bin card; those failed diagnostics are preserved separately.
+
+Systematic inputs:
+Atharv's live signal fit file was hash-verified against the November 5 snapshot:
+/uscms/home/akanchi/analysis/CMSSW_16_0_0/src/CMSAnalysis/Analysis/bin/fitting/H++SignalParameterFunctions.txt
+SHA256 ef030974d11f0be7eb04f6818249143c37cb62302d7818d265fd2e48c5d824e1.
+The usable separate background fit snapshot is Sonit's 10_28_26/kansas_v2
+H++BackgroundFunctions.txt, SHA256
+c5dcb4efd0341f7aa0bb4c3ca14cf82a72389e5721844349a493624efc8e9d9d.
+The available names include FitUncertainty, chargeFlip, eIdIso, eReco, eTrig,
+l1Prefire, muId, muIso, pu, roccor, tauES, tauVsEle, tauVsJet, tauVsMu, xsec, zpt.
+These remain 1D fitted inputs. A physical correlated 2D nuisance response and rate
+model cannot be inferred from them alone. Full-systematics execution is blocked.
+
+Completed real statistical baseline:
+The old, distinct one-bin 500 GeV statistics-only model was converted and run blind.
+Expected r limits, in order 2.5%,16%,50%,84%,97.5%:
+0.0823, 0.1150, 0.1714, 0.2629, 0.3890 (printed precision).
+These are not 2D limits and are not a comparison to a new 2D model. The card rates
+are unchanged: signal 32.181826138749045, ZZ 2.136107147225314,
+ttbarMultiboson 2.3477615175730744. Full output and ROOT limit tree are in
+runner-onebin-baseline. No other mass point has a validated physics result here.
+
+Build and replay commands:
+source /cvmfs/cms.cern.ch/cmsset_default.sh
+cd /uscms_data/d3/cjdavis/limitsetting-2d-20261109/CMSSW_16_0_0/src
+eval "$(scram runtime -sh)"
+cd HiggsAnalysis/CombinedLimit/LimitSetting
+bash setup.sh --build
+cd /uscms_data/d3/cjdavis/limitsetting-2d-20261109
+bash run_cms.sh python3 testDSCBDomain.py
+bash run_cms.sh python3 check_parameterization.py
+bash run_cms.sh python3 test_custom_io.py write
+bash run_cms.sh python3 test_custom_io.py read
+
+Within software-fixture, under the same CMSSW environment:
+python3 ../testWorkspace.py write ../CMSSW_16_0_0/src/HiggsAnalysis/CombinedLimit/LimitSetting/prepareForLimit.C
+text2workspace.py datacard.txt -m 500 -o datacard.root
+python3 ../testWorkspace.py check
+These inputs are explicitly software fixtures. No fixture limit is reported as physics.
+
+Within runner-onebin-baseline, under the same CMSSW environment:
+text2workspace.py onebin.txt -m 500 -o onebin.root
+python3 ../CMSSW_16_0_0/src/HiggsAnalysis/CombinedLimit/LimitSetting/runCombineCommands.py --datacard onebin.root --masses 500
+The runner invokes combine onebin.root -M AsymptoticLimits --run blind -m 500 -n HiggsCombine500.
+
+When real paired inputs become available, run in a distinct per-mass directory:
+root -l -b -q 'PATH/prepareForLimit.C+(false,"VERIFIED_PAIRED_INPUT.root",500,"0tau")'
+text2workspace.py datacard.txt -m 500 -o datacard.root
+python3 PATH/runCombineCommands.py --datacard datacard.root --masses 500
+For a validated per-mass input scan use --datacard 'mass{mass}/datacard.root'.
+Do not run the scan before the source and one-mass physics validations pass.
+
+Final verification and commit links are appended after execution below.
+
+Final verification:
+- Clean isolated CMSSW/Combine builds passed, including both custom dictionaries.
+- 734 DSCB checks passed. Maximum full-line normalization error was
+  1.2012613126444194e-13. Coverage includes exponents below 1, equal to 1,
+  immediately above 1, ordinary values through 48 and 1000, and +/-1e300;
+  invalid/nonfinite parameters and coordinates; and direct template serialization.
+- The named DSCB template constructor now initializes valid shape parameters with
+  zero normalization (alpha=1, n=2, mean=0, sigma=1). Its shape template is evaluated
+  with external fitted parameters. This prevents ROOT from sampling an invalid
+  zero-width template while saving it, without modifying fitted parameters or rates.
+  The failed serialization receipt is preserved as custom-io-invalid-template.log.
+  ROOT TF1 serialization samples callback functions; see
+  https://root.cern.ch/doc/v636/classTF1.html .
+- Actual 0tau X/Y parameterizations were scanned at masses 500,1000,1500,
+  every available nuisance at -5,-2,-1,0,1,2,5 and six observable coordinates.
+  654 settings returned finite nonnegative values; 18 were explicitly rejected for
+  invalid transitions/widths. This is not a valid full nuisance domain. The previous
+  500 GeV X FitUncertainty=-2 negative value is now positive, including
+  2.2679868237506667e-6 at observable 500. parameterization-domain.json has details.
+- FitFunctionPDF2D custom class save/reload passed in separate ROOT processes:
+  27 raw-value comparisons at three masses, three nuisance settings, three
+  coordinate pairs. This tests streaming, not the independence assumption.
+- The explicitly synthetic software fixture (not physics input) passed TH2
+  construction, three unit PDF integrals, variable-bin probability reconstruction,
+  original and converted yields, background-only observation, fresh-process ROOT
+  reload and text2workspace.py. Model yields at r=0,1,2 were 20,30,40 as specified
+  by fixture counts. Missing histogram, wrong axes, negative/nonfinite bins,
+  flow content, flow cancellation with nonzero error and inconsistent binning were
+  all rejected. The first conversion attempt raced an ongoing library rebuild;
+  its logs are preserved, and conversion passed after the build completed.
+- Three runner unit tests passed, including malformed quantiles, a failed process,
+  actual mass flags, diagnostics persistence and rejection of a reused fixed template.
+- The real one-bin baseline was rerun in the fresh isolated release. The five
+  ROOT limit values matched exactly across runs:
+  0.08234596252441406, 0.1150406152009964, 0.17138671875,
+  0.2629294693470001, 0.38901954889297485.
+- Both source worktrees were clean after commits. No new source comments were added.
+- No actual charge-paired 2D signal/background workspace or 2D expected physics
+  limit was produced. No mass scan or full-systematic inference was performed.
+  Other-background completeness and MC template statistical treatment also remain
+  unvalidated and must be assessed with real paired inputs.
+
+Milestones:
+DSCB mathematical-domain fix: complete, tested and pushed.
+Correct paired 2D event data: blocked on the external producer/selected records.
+Correct 2D signal/background model: TH2 implementation and software tests complete;
+  physics validation blocked on those inputs.
+Valid statistics-only 2D expected limits: blocked; none obtained.
+Valid full-systematics 2D expected limits: blocked; none obtained.
+
+Pushed implementation commits:
+CMSAnalysis:
+https://github.com/IMSA-CMS/CMSAnalysis/commit/bab2c159ea5acc8559306ab829fc456b49284a00
+  bound dscb tails
+  Analysis/src/DSCBFitFunction.cc
+  Analysis/test/testDSCBDomain.py
+LimitSetting:
+https://github.com/IMSA-CMS/LimitSetting/commit/3963810
+  install 2d pdf
+  setup.sh
+https://github.com/IMSA-CMS/LimitSetting/commit/fa0baa1
+  fix limit runner
+  runCombineCommands.py, tests/testRunner.py
+https://github.com/IMSA-CMS/LimitSetting/commit/b086585
+  build joint templates
+  prepareForLimit.C, tests/testWorkspace.py
+Both branches are named repair-2d-20261109. No upstream main/master merge or
+force push was performed.
+
+Workspace/card locations, relative to the remote evidence directory:
+software-fixture/higgsworkspace.root and software-fixture/datacard.txt
+software-fixture/datacard.root
+  software plumbing only, not a charge-paired physics model.
+custom-io.root
+  custom product-class serialization only, not a validated joint model.
+runner-onebin-baseline/onebin.root and runner-onebin-baseline/onebin.txt
+  real preserved one-bin baseline, not 2D.
+runner-onebin-repeat/onebin.root
+  independent fresh-release baseline replay.
+A local evidence mirror retains these small artifacts and their logs.
