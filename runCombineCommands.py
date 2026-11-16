@@ -56,25 +56,26 @@ for mass in massArray:
 	
 	result = subprocess.run(
 	[
-		"nohup",
+		#"nohup",
 		"combine",
 		file_name,
 		"-M", "AsymptoticLimits",
 		#"-M", "MarkovChainMC",
 		"--freezeParameters", "realHiggsMass,b_ee,b_eu",
 		"--setParameters", f"realHiggsMass={mass},b_ee=1,b_eu=1",
+		"--run", "blind",
 		"-m", "1000",
 		 #"--tries", "200",
 		"-n", f"HiggsCombine{mass}",
 		#"-i", "200",
 		#"-b", "2",
-		"-t", "1",
+		#"-t", "200",
 		# "--rMax", "100",
 		"-s", str(random.randint(1,999999)),
 		"--toysNoSystematics",
 		"-v", "2"
 	],
-	capture_output = False,
+	capture_output = True,
 	text = True)
 	
 	terminal_outputs.append(result.stdout)
@@ -87,12 +88,29 @@ band_68_array = []
 band_95_array = []
 
 for terminal_output in terminal_outputs:
-	median_match= re.search(r"median expected limit: r < ([\d\.]+)", terminal_output)
-	band_68_match = re.search(r"68% expected band : ([\d\.]+) < r < ([\d\.]+)", terminal_output)
-	band_95_match = re.search(r"95% expected band : ([\d\.]+) < r < ([\d\.]+)", terminal_output)
+	# median_match= re.search(r"median expected limit: r < ([\d\.]+)", terminal_output)
+	# band_68_match = re.search(r"68% expected band : ([\d\.]+) < r < ([\d\.]+)", terminal_output)
+	# band_95_match = re.search(r"95% expected band : ([\d\.]+) < r < ([\d\.]+)", terminal_output)
 
-	band_68 = (float(band_68_match.group(1)), float(band_68_match.group(2))) if band_68_match else (None,None)
-	band_95 = (float(band_95_match.group(1)), float(band_95_match.group(2))) if band_95_match else (None,None)
+	# Extract the values from the matches and convert them to floats
+	# Following this format:
+# 	Observed Limit: r < 11.9195
+# Expected  2.5%: r < 3.7034
+# Expected 16.0%: r < 6.4610
+# Expected 50.0%: r < 12.3125
+# Expected 84.0%: r < 23.6005
+# Expected 97.5%: r < 37.3324
+	median_match = re.search(r"Expected 50.0%: r < ([\d\.]+)", terminal_output)
+	band_68_match_low = re.search(r"Expected 16.0%: r < ([\d\.]+)", terminal_output)
+	band_68_match_high = re.search(r"Expected 84.0%: r < ([\d\.]+)", terminal_output)
+	band_95_match_low = re.search(r"Expected  2.5%: r < ([\d\.]+)", terminal_output)
+	band_95_match_high = re.search(r"Expected 97.5%: r < ([\d\.]+)", terminal_output)
+
+	print ("Band 68 match:", band_68_match_low, band_68_match_high)
+	print ("Band 95 match:", band_95_match_low, band_95_match_high)
+
+	band_68 = (float(band_68_match_low.group(1)), float(band_68_match_high.group(1))) if band_68_match_low and band_68_match_high else (None,None)
+	band_95 = (float(band_95_match_low.group(1)), float(band_95_match_high.group(1))) if band_95_match_low and band_95_match_high else (None,None)
 	median_limit = float(median_match.group(1)) if median_match else None
 
 	median_limit_array.append(median_limit)
